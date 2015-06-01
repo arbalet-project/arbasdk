@@ -12,7 +12,7 @@
     A) You do not use WS2812B, WS2811, WS2812 or TM1804 based LED strips:
     A.1) You can implement you own for you own LEDs as long as you make it
     compatible with the protocol used by arbasdk. See the wiki to do so:
-    http://github.com/ymollard/Arbalet/TODO
+    http://github.com/arbalet-project/arbadoc
     A.2) The read_model() function already reads the protocol used by arbasdk
     and returns a matrix of RGB values.
     A.3) From this matrix update you LEDs as needed, whatever they are
@@ -31,21 +31,8 @@
     B.4) Update the macros of this script (width, height, pin)
     B.5) Connect the arbasdk...
 
-    Copyright (C) 2015 Yoan Mollard <yoan@konqifr.fr>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Copyright 2015 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
+    License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 */
 
 #include <PololuLedStrip.h>
