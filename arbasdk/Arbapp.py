@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
     Arbalet - ARduino-BAsed LEd Table
     Arbapp - Arbalet Application

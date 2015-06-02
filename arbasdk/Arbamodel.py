@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
     Arbalet - ARduino-BAsed LEd Table
     Arbamodel - Arbalet State
@@ -155,12 +154,3 @@ class Arbamodel(object):
         for w in range(width):             # TODO Find sth more efficient that constructing objects and browsing lists so much
             for h in range(height):
                 self.set_pixel(h, w, *json_model[h][w])
-
-
-if __name__ == '__main__':
-    m = Arbamodel(10, 10, 'black')
-    m.group_pixels(zip(range(10), range(10)), "my_red_pixels", 'red')
-    print m
-    m.delete_from_group([[0,0]])
-    m.set_group("my_red_pixels", "white")
-    print m

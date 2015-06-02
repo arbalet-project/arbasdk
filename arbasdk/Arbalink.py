@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
     Arbalet - ARduino-BAsed LEd Table
     Arbalink - Arbalet Link to the hardware table
@@ -43,20 +42,15 @@ class Arbalink(Thread):
                 self.current_device = (self.current_device+1) % len(self.config['devices'])
             else:
                 success = True
-        if success:
-            sleep(2)
         return success
 
     def connect_until(self, timeout, num_attempts=20):
         success = False
-        start_time = time()
         while not success:
             success = self.connect()
-            elapsed_time = time()-start_time
-            if not success and elapsed_time<timeout:
-                sleep(float(timeout)/num_attempts)
-            else:
+            if success:
                 break
+            sleep(0.05)
         return success
 
     def set_model(self, arbamodel):
@@ -81,11 +75,15 @@ class Arbalink(Thread):
                         array = bytearray(' '*(self.model.get_height()*self.model.get_width()*3))
                         for h in range(self.model.get_height()):
                             for w in range(self.model.get_width()):
-                                idx = self.config['mapping'][h][w]*3 # = mapping shift by 3 colors
-                                # an IndexError here on bytearray could mean that config file is wrong
-                                array[idx] = __limit(self.model.model[h][w].r*self.diminution)
-                                array[idx+1] = __limit(self.model.model[h][w].g*self.diminution)
-                                array[idx+2] = __limit(self.model.model[h][w].b*self.diminution)
+                                try:
+                                    idx = self.config['mapping'][h][w]*3 # = mapping shift by 3 colors
+                                except IndexError, e:
+                                    raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
+                                    self.close('config error')
+                                else:
+                                    array[idx] = __limit(self.model.model[h][w].r*self.diminution)
+                                    array[idx+1] = __limit(self.model.model[h][w].g*self.diminution)
+                                    array[idx+2] = __limit(self.model.model[h][w].b*self.diminution)
                         try:
                             self.serial.write(array) # Write the whole rgb-matrix
                             #self.serial.readline() # Wait Arduino's feedback

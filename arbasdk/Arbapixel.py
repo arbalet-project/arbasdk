@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
     Arbalet - ARduino-BAsed LEd Table
     Arbapixel - Arbalet Pixel
@@ -88,15 +87,3 @@ class Arbapixel(object):
     def to_json(self):
         return [self.r, self.g, self.b, self.a]
 
-
-
-
-if __name__ == '__main__':
-    black1 = Arbapixel('red')
-    black2 = Arbapixel(255, 0, 0)
-    print "{} = {} ? {}".format(black1, black2, black1 == black2)
-
-    white1 = Arbapixel('white')
-    white2 = Arbapixel('red') + Arbapixel('green') + Arbapixel('blue')
-    white3 = Arbapixel(1, 1, 1)*255
-    print "{} = {} = {} ? {}".format(white1, white2, white3, white1 == white2 and white2==white3)

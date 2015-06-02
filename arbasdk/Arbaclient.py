@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
     Arbalet - ARduino-BAsed LEd Table
 
@@ -53,8 +52,3 @@ class Arbaclient(Thread):
             self.send_model()
             sleep(1./self.rate)
         self.sender.close()
-
-if __name__=='__main__':
-    c = Arbaclient()
-    raw_input("[Arbaclient test routine] Press enter when server is listening to {}:{}".format(c.server, c.port))
-    c.run()
