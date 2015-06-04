@@ -11,7 +11,7 @@
 from threading import Thread, Lock
 from serial import Serial
 from sys import stderr
-from time import sleep, time
+from time import sleep
 
 __all__ = ['Arbalink']
 

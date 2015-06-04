@@ -14,7 +14,7 @@ from . Arbaclient import Arbaclient
 from os import path
 from json import load
 from ConfigParser import RawConfigParser
-import arbasdk
+from arbasdk import __file__
 
 __all__ = ['Arbalet']
 
@@ -26,13 +26,13 @@ class Arbalet(object):
         self.server = server
 
         if config=='':
-            cfg_path = path.join(path.dirname(arbasdk.__file__), '..', 'config', 'default.cfg')
+            cfg_path = path.join(path.dirname(__file__), '..', 'config', 'default.cfg')
             cfg_parser = RawConfigParser()
             cfg_parser.read(cfg_path)
             config = cfg_parser.get('DEFAULT', 'config')
 
         if not path.isfile(config):
-            config = path.join(path.dirname(arbasdk.__file__), '..', 'config', config)
+            config = path.join(path.dirname(__file__), '..', 'config', config)
         if not path.isfile(config):
             raise Exception("Config file '{}' not found".format(config))
 

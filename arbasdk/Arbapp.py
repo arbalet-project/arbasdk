@@ -11,6 +11,7 @@
 
 from Arbalet import Arbalet
 from Arbamodel import Arbamodel
+from pygame import init as pygame_init
 import argparse, __builtin__
 
 __all__ = ['Arbapp']
@@ -23,6 +24,7 @@ class Arbapp(object):
             raise RuntimeError('Arbapp can be instanciated only once')
 
         Arbapp.app_declared = True
+        pygame_init()
         self.read_args(argparser)
 
         self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
