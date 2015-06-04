@@ -14,7 +14,7 @@ setup(
     author_email="contact@konqi.fr",
     long_description=open('README.md').read(),
 
-    install_requires= ["pygame", "pyserial", "bottle", "python-midi", "pyaudio"],
+    install_requires= ["pygame", "pyserial", "bottle", "python-midi", "pyaudio", "zmq"],
     include_package_data=True,
     zip_safe=False,  # contains data files
 
