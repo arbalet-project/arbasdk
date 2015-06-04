@@ -18,22 +18,21 @@ __all__ = ['Arbapp']
 class Arbapp(object):
     app_declared = False  # True when an Arbapp has been instanciated
 
-    def __init__(self, argparser=None):
+    def __init__(self, argparser=None, moke_execution=False):
         if Arbapp.app_declared:
             raise RuntimeError('Arbapp can be instanciated only once')
 
         Arbapp.app_declared = True
         self.read_args(argparser)
 
-        self.arbalet = Arbalet(not self.args.no_gui, self.args.hardware, self.args.server, self.args.brightness,
-                               self.args.factor_sim, self.args.config)
+        self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
+                               self.args.server, self.args.brightness, self.args.factor_sim, self.args.config)
 
         self.width = self.arbalet.width
         self.height = self.arbalet.height
 
         self.model = Arbamodel(self.height, self.width, 'black')
         self.set_model(self.model)
-        self.hardware, self.simulation = False, True
 
     def is_interactive(self):
         """
