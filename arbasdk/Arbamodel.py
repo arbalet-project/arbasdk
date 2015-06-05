@@ -24,10 +24,6 @@ class Arbamodel(object):
         self.model_lock = Lock()
         self.model = [[Arbapixel(*color) if len(color)>0 else Arbapixel('black') for j in range(width)] for i in range(height)]
 
-        self.groups_lock = Lock()
-        self.groups = {}
-        self.reverse_groups = [[None for j in range(width)] for i in range(height)]
-
     def copy(self):
         return deepcopy(self)
 
@@ -45,61 +41,6 @@ class Arbamodel(object):
     def set_pixel(self, h, w, *color):
         with self.model_lock:
             self.model[h][w] = Arbapixel(*color)
-        self.delete_from_group([(h, w)])
-
-    def group_pixels(self, pixels, group_name, *color):
-        if not (isinstance(pixels, list) or isinstance(pixels, tuple)) and len(pixels)>0 and \
-            (isinstance(pixels[0], list) or isinstance(pixels[0], tuple) and len(pixels[0])==2):
-            raise Exception("[Arbamodel.create_groupe] Unexpected parameter type {}, must be a list of coordinates".format(type(pixels)))
-        try:
-            with self.groups_lock:
-                h, w = list(self.groups[group_name])[0]
-        except KeyError:
-            pixel = Arbapixel(*color)
-        else:
-            with self.model_lock:
-                pixel = self.model[h][w]
-        with self.model_lock:
-            for h,w in pixels:
-                self.model[h][w] = pixel
-
-        # Remove pixels from a former group
-        self.delete_from_group(pixels)
-        with self.groups_lock:
-            if not self.groups.has_key(group_name):
-                self.groups[group_name] = set()
-            self.groups[group_name] = self.groups[group_name].union(map(tuple, pixels))
-            for h, w in pixels:
-                self.reverse_groups[h][w] = group_name
-
-    def set_group(self, group_name, *color):
-        if (not self.groups.has_key(group_name)) and group_name=="all":
-            self.group_pixels(self.get_all_combinations(), "all", *color)
-        h, w = next(iter(self.groups[group_name])) # raises a StopIteration if group is empty
-        with self.model_lock:
-            self.model[h][w].set_color(*color)
-
-    def delete_from_group(self, pixels):
-        if not (isinstance(pixels, list) or isinstance(pixels, tuple)) and len(pixels)>0 and \
-        (isinstance(pixels[0], list) or isinstance(pixels[0], tuple) and len(pixels[0])==2):
-            raise Exception("[Arbamodel.delete_from_group] Unexpected parameter type {}, must be a list of coordinates".format(type(pixels)))
-
-        with self.groups_lock:
-            for h, w in pixels:
-                if self.reverse_groups[h][w]:
-                    group_name = self.reverse_groups[h][w]
-                    self.groups[group_name].remove((h, w))
-                    self.reverse_groups[h][w] = None
-                    # If group has no more pixel, delete it
-                    if len(self.groups[group_name])==0:
-                        self.groups.pop(group_name)
-                    # Copy a new instance of this pixel, apart from the group
-                    with self.model_lock:
-                        self.model[h][w] = deepcopy(self.model[h][w])
-
-
-    def get_groups(self):
-        return self.groups
 
     def get_all_combinations(self):
         return map(tuple, product(range(self.height), range(self.width)))
