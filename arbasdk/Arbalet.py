@@ -19,7 +19,7 @@ from arbasdk import __file__
 __all__ = ['Arbalet']
 
 class Arbalet(object):
-    def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=30, config=''):
+    def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=30, config='', interactive=True):
         self.simulation = simulation
         self.hardware = hardware
         self.diminution = diminution
@@ -43,7 +43,7 @@ class Arbalet(object):
         self.width = len(self.config['mapping'][0]) if self.height>0 else 0
 
         if self.simulation:
-            self.arbasim = Arbasim(self.height, self.width, self.height*factor_sim, self.width*factor_sim)
+            self.arbasim = Arbasim(self.height, self.width, self.height*factor_sim, self.width*factor_sim, interactive=interactive)
 
         if self.hardware:
             self.arbalink = Arbalink(self.config, diminution=self.diminution)
