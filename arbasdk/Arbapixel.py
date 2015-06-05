@@ -29,7 +29,6 @@ class Arbapixel(object):
         This might cause less easily understandable runtime exceptions (color components are strings, have >3 elements, ...)
         :param args: A string representing the color, another Arbapixel that will be copied or a 3-tuple [r, g, b]
         """
-        print args
         self.__set__(type(args), args)
 
     @property
