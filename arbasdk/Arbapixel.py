@@ -13,77 +13,67 @@ __all__ = ['Arbapixel', 'hsv']
 
 def hsv(h, s, v, a=100):
     # ranges H = [0, 360], S = [0, 100], V = [0, 100], A = [0, 100]
-    c = Color('black')
+    c = Color(0, 0, 0)
     c.hsva = map(int, (h, s, v, a))
     return (c.r, c.g, c.b, c.a)
 
-# This class has a hack to inherit from pygame.Color with getattr since its C
-# implementation does not allow to inherit properly
 class Arbapixel(object):
+    """
+    Arbapixel represents a single pixel at a h, w coordinate with a RGB color.
+    pygame.Color is used for hsv conversion as well as init from string
+    """
 
-    def __init__(self, *args):
-        self.__set_pygame_color(*args)
-
-    def __set_pygame_color(self, *args):
-        if len(args)==1 and isinstance(args[0], Arbapixel): # Simulates a copy constructor
-            self.__pygame_color = args[0].get_color()
-        elif len(args)==1 and (isinstance(args[0], list) or isinstance(args[0], tuple)) and (len(args[0])==3 or len(args[0])==4):
-            self.__pygame_color = Color(*(args[0]))
-        else:
-            self.__pygame_color = Color(*args)  # Normal constructor
-
-    def __limit(self, v):
+    def __init__(self, args):
         """
-        Limitator avoiding overflows and underflows
+        This constructor squeezes a lot of runtime checks to speed up execution.
+        This might cause less easily understandable runtime exceptions (color components are strings, have >3 elements, ...)
+        :param args: A string representing the color, another Arbapixel that will be copied or a 3-tuple [r, g, b]
         """
-        return int(max(0, min(255, v)))
+        print args
+        self.__set__(type(args), args)
 
     @property
-    def hsv(self):
+    def hsva(self):
         """
         :return: The HSVA representation of this color
         """
-        return self.__pygame_color.hsva
-
-    def __set__(self, instance, value):
-        self.__set_pygame_color(value)
-
-    def __getattr__(self, name):
-        return getattr(self.__pygame_color, name)
+        return Color(self.r, self.g, self.b).hsva
 
     def __add__(self, other):
-        return Arbapixel(self.__limit(self.r+other.r),
-                         self.__limit(self.g+other.g),
-                         self.__limit(self.b+other.b),
-                         self.__limit(self.a+other.a))
+        return Arbapixel((min(255, self.r+other.r),
+                          min(255, self.g+other.g),
+                          min(255, self.b+other.b)))
 
     def __eq__(self, other):
-        return self.__pygame_color == other.__pygame_color
+        return self.r == other.r and self.g == other.g and self.b == other.b
 
     def __sub__(self, other):
-        return Arbapixel(self.__limit(self.r-other.r),
-                         self.__limit(self.g-other.g),
-                         self.__limit(self.b-other.b),
-                         self.__limit(self.a-other.a))
-
+        return Arbapixel((max(0, self.r-other.r),
+                          max(0, self.g-other.g),
+                          max(0, self.b-other.b)))
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return self.__pygame_color.__str__()
+        return '['+str(self.r)+', '+str(self.g)+', '+str(self.b)+']'
 
     def __mul__(self, m):
-        return Arbapixel(self.__limit(self.r*m),
-                         self.__limit(self.g*m),
-                         self.__limit(self.b*m),
-                         self.__limit(self.a*m))
+        def limit(v):
+            return max(0, min(255, int(v)))
+        return Arbapixel((limit(self.r*m),
+                          limit(self.g*m),
+                          limit(self.b*m)))
 
-    def get_color(self):
-        return self.__pygame_color
-
-    def set_color(self, *color):
-        self.__set_pygame_color(*color)
+    def __set__(self, instance, value):
+        if instance==tuple or instance==list:
+            self.r, self.g, self.b = value[0], value[1], value[2]
+        elif instance==Arbapixel:
+            self.r, self.g, self.b = value.r, value.g,  value.b
+        else:
+            # If we receive something else, pray that pygame.Color will recognize this color (including strings)
+            color = Color(value)
+            self.r, self.g, self.b = color.r, color.g,  color.b
 
     def to_json(self):
-        return [self.r, self.g, self.b, self.a]
+        return [self.r, self.g, self.b]
 

@@ -11,7 +11,7 @@ import pygame
 import logging
 import threading
 from os import environ
-from pygame import display, draw, quit, font, init as pygame_init, Rect, QUIT
+from pygame import display, draw, quit, font, color, init as pygame_init, Rect, QUIT
 from . Rate import Rate
 
 __all__ = ['Arbasim']
@@ -129,11 +129,12 @@ class Grid(object):
             for w in range(state.get_width()):
                 for h in range(state.get_height()):
                     i = i+1
-                    pixel = state.get_pixel(h, w).get_color()
-                    screen.fill(pixel, pygame.Rect(w*self.cell_width,
-                                                   h*self.cell_height,
-                                                   self.cell_width,
-                                                   self.cell_height))
+                    pixel = state.get_pixel(h, w)
+                    screen.fill(color.Color(pixel.r, pixel.g, pixel.b),
+                                pygame.Rect(w*self.cell_width,
+                                h*self.cell_height,
+                                self.cell_width,
+                                self.cell_height))
         # Draw vertical lines
         for w in range(self.num_cells_wide):
             pygame.draw.line(screen, self.color, (w*self.cell_width, 0), (w*self.cell_width, self.height), self.border_thickness)

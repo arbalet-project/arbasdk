@@ -17,12 +17,12 @@ __all__ = ['Arbamodel']
 
 class Arbamodel(object):
     # line, column
-    def __init__(self, height, width, *color):
+    def __init__(self, height, width, color):
         self.height = height
         self.width = width
 
         self.model_lock = Lock()
-        self.model = [[Arbapixel(*color) if len(color)>0 else Arbapixel('black') for j in range(width)] for i in range(height)]
+        self.model = [[Arbapixel(color) if len(color)>0 else Arbapixel('black') for j in range(width)] for i in range(height)]
 
     def copy(self):
         return deepcopy(self)
@@ -38,17 +38,17 @@ class Arbamodel(object):
             p = self.model[h][w]
         return p
 
-    def set_pixel(self, h, w, *color):
+    def set_pixel(self, h, w, color):
         with self.model_lock:
-            self.model[h][w] = Arbapixel(*color)
+            self.model[h][w] = Arbapixel(color)
 
     def get_all_combinations(self):
         return map(tuple, product(range(self.height), range(self.width)))
 
-    def set_all(self, *color):
+    def set_all(self, color):
         for w in range(self.width):
             for h in range(self.height):
-                self.model[h][w].set_color(*color)
+                self.model[h][w].set_color(color)
 
     def __add__(self, other):
         model = Arbamodel(self.height, self.width)
