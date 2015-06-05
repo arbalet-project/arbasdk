@@ -9,7 +9,7 @@ setup(
     version=__version__,
     license="GNU General Public License 2",
     description="Python API and examples for development with Arbalet LED tables (ARduino-BAsed LEd Table)",
-    url='http://github.com/ymollard/Arbalet',
+    url='http://github.com/arbalet-project',
     author="Yoan Mollard",
     author_email="contact@konqi.fr",
     long_description=open('README.md').read(),
