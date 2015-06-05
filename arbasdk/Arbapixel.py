@@ -25,12 +25,23 @@ class Arbapixel(object):
         self.__set_pygame_color(*args)
 
     def __set_pygame_color(self, *args):
-        if len(args)==1 and isinstance(args[0], Arbapixel): # Simulates a copy constructor
+        def cond1():
+            return len(args)==1 and isinstance(args[0], Arbapixel)
+        def action1():
             self.__pygame_color = args[0].get_color()
-        elif len(args)==1 and (isinstance(args[0], list) or isinstance(args[0], tuple)) and (len(args[0])==3 or len(args[0])==4):
+        def cond2():
+            return (len(args)==1 and (isinstance(args[0], list) or isinstance(args[0], tuple)) and (len(args[0])==3 or len(args[0])==4))
+        def action2():
             self.__pygame_color = Color(*(args[0]))
-        else:
+        def action3():
             self.__pygame_color = Color(*args)  # Normal constructor
+
+        if cond1(): # Simulates a copy constructor
+            action1()
+        elif cond2():
+            action2()
+        else:
+            action3()
 
     def __limit(self, v):
         """
