@@ -10,7 +10,7 @@
 
 import zmq
 from threading import Thread
-from time import sleep
+from . Rate import Rate
 
 __all__ = ['Arbaclient']
 
@@ -22,7 +22,7 @@ class Arbaclient(Thread):
         self.port = str(port)
         self.model = None
         self.running = True
-        self.rate = rate
+        self.rate = Rate(rate)
 
         # Network-related attributes
         self.context = zmq.Context()
@@ -50,5 +50,5 @@ class Arbaclient(Thread):
         self.connect()
         while self.running:
             self.send_model()
-            sleep(1./self.rate)
+            self.rate.sleep()
         self.sender.close()

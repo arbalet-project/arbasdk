@@ -10,9 +10,9 @@
 import pygame
 import logging
 import threading
-import time
 from os import environ
 from pygame import display, draw, quit, font, init as pygame_init, Rect, QUIT
+from . Rate import Rate
 
 __all__ = ['Arbasim']
 
@@ -33,7 +33,7 @@ class Arbasim(threading.Thread):
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%I:%M:%S')
         self.sim_state = "idle"
         self.running = True
-        self.refresh_rate = rate
+        self.rate = Rate(rate)
         self.interactive = interactive
 
         # Current table model storing all pixels
@@ -97,7 +97,7 @@ class Arbasim(threading.Thread):
             #self.screen.blit(rendered_caption, location_caption)
 
             pygame.display.update()
-            time.sleep(1./self.refresh_rate)
+            self.rate.sleep()
         if self.interactive:
             pygame.quit()
 

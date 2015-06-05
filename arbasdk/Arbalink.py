@@ -12,6 +12,7 @@ from threading import Thread, Lock
 from serial import Serial
 from sys import stderr
 from time import sleep
+from . Rate import Rate
 
 __all__ = ['Arbalink']
 
@@ -26,6 +27,7 @@ class Arbalink(Thread):
         self.diminution = diminution
         self.running = True
         self.config = config
+        self.rate = Rate(self.config['refresh_rate'])
 
         if autorun:
             self.start()
@@ -94,4 +96,4 @@ class Arbalink(Thread):
             if reconnect:
                 self.connect_until(60)
             else:
-                sleep(1./self.config['refresh_rate'])
+                self.rate.sleep()
