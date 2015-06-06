@@ -97,4 +97,4 @@ class Arbamodel(object):
             raise ValueError("Data received have size [{}, {}] while model expects [{}, {}]".format(height, width, self.get_height(), self.get_width()))
         for w in range(width):             # TODO Find sth more efficient that constructing objects and browsing lists so much
             for h in range(height):
-                self.set_pixel(h, w, *json_model[h][w])
+                self.set_pixel(h, w, json_model[h][w])
