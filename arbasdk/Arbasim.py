@@ -9,14 +9,14 @@
 """
 import pygame
 import logging
-import threading
+from threading import Thread
 from os import environ
 from pygame import display, draw, quit, font, color, init as pygame_init, Rect, QUIT
 from . Rate import Rate
 
 __all__ = ['Arbasim']
 
-class Arbasim(threading.Thread):
+class Arbasim(Thread):
     def __init__(self, arbalet_height, arbalet_width, sim_height, sim_width, rate=30, interactive=True, autorun=True):
         """
         Arbasim constructor: launches the simulation
@@ -29,7 +29,7 @@ class Arbasim(threading.Thread):
         :param interactive: True if the simulator is run in an interactive python console or if it's used without Arbapp inheritance
         :return:
         """
-        threading.Thread.__init__(self)
+        Thread.__init__(self)
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%I:%M:%S')
         self.sim_state = "idle"
         self.running = True
@@ -38,7 +38,6 @@ class Arbasim(threading.Thread):
 
         # Current table model storing all pixels
         self.arbamodel = None
-        self.lock_model = threading.Lock()
 
         self.sim_width = sim_width
         self.sim_height = sim_height
@@ -71,8 +70,7 @@ class Arbasim(threading.Thread):
         :param arbamodel:
         :return:
         """
-        with self.lock_model:
-            self.arbamodel = arbamodel
+        self.arbamodel = arbamodel
         self.sim_state = "running" if arbamodel!=None else "idle"
 
     def run(self):
@@ -86,10 +84,8 @@ class Arbasim(threading.Thread):
             pygame.draw.rect(self.screen,(0, 0, 0), pygame.Rect(0, 0, self.sim_width+2, self.sim_height+2))
             pygame.display.set_caption("Arbasim [{}]".format(self.sim_state))
 
-
             # Render grid and pixels
-            with self.lock_model:
-                self.grid.render(self.screen, self.arbamodel)
+            self.grid.render(self.screen, self.arbamodel)
 
             #caption = "[{}] Caption...".format(self.sim_state)
             #rendered_caption = self.font.render(caption, 1, (255, 255, 255))
@@ -111,7 +107,7 @@ class Grid(object):
     :param color: color of background
     :return:
     """
-    def __init__(self, cell_height,cell_width,num_cells_wide,num_cells_tall, color):
+    def __init__(self, cell_height, cell_width, num_cells_wide, num_cells_tall, color):
         self.cell_height = cell_height
         self.cell_width = cell_width
         self.num_cells_wide = num_cells_wide
@@ -121,20 +117,20 @@ class Grid(object):
         self.width = cell_width  * num_cells_wide
         self.border_thickness = 1
 
-    def render(self, screen, state):
+    def render(self, screen, model):
         screen.lock()
         # Draw pixels
-        if state:
-            i = 0
-            for w in range(state.get_width()):
-                for h in range(state.get_height()):
-                    i = i+1
-                    pixel = state.get_pixel(h, w)
+        if model:
+            model.lock()
+            for w in range(model.get_width()):
+                for h in range(model.get_height()):
+                    pixel = model.get_pixel(h, w)
                     screen.fill(color.Color(pixel.r, pixel.g, pixel.b),
                                 pygame.Rect(w*self.cell_width,
                                 h*self.cell_height,
                                 self.cell_width,
                                 self.cell_height))
+            model.unlock()
         # Draw vertical lines
         for w in range(self.num_cells_wide):
             pygame.draw.line(screen, self.color, (w*self.cell_width, 0), (w*self.cell_width, self.height), self.border_thickness)

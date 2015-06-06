@@ -75,6 +75,7 @@ class Arbalink(Thread):
                 if self.serial and self.serial.isOpen():
                     if self.model:
                         array = bytearray(' '*(self.model.get_height()*self.model.get_width()*3))
+                        self.model.lock()
                         for h in range(self.model.get_height()):
                             for w in range(self.model.get_width()):
                                 try:
@@ -83,9 +84,10 @@ class Arbalink(Thread):
                                     raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
                                     self.close('config error')
                                 else:
-                                    array[idx] = __limit(self.model.model[h][w].r*self.diminution)
-                                    array[idx+1] = __limit(self.model.model[h][w].g*self.diminution)
-                                    array[idx+2] = __limit(self.model.model[h][w].b*self.diminution)
+                                    pixel = self.model.get_pixel(h, w)
+                                    array[idx] = __limit(pixel.r*self.diminution)
+                                    array[idx+1] = __limit(pixel.g*self.diminution)
+                                    array[idx+2] = __limit(pixel.b*self.diminution)
                         try:
                             self.serial.write(array) # Write the whole rgb-matrix
                             #self.serial.readline() # Wait Arduino's feedback
@@ -93,6 +95,8 @@ class Arbalink(Thread):
                             pass
                         else:
                             reconnect = False
+                        # serial I/Os while a mutex is locked, oh oh
+                        self.model.unlock()
             if reconnect:
                 self.connect_until(60)
             else:

@@ -11,7 +11,7 @@
 from Arbapixel import Arbapixel
 from copy import deepcopy
 from itertools import product
-from threading import Lock
+from threading import RLock
 
 __all__ = ['Arbamodel']
 
@@ -21,11 +21,17 @@ class Arbamodel(object):
         self.height = height
         self.width = width
 
-        self.model_lock = Lock()
-        self.model = [[Arbapixel(color) if len(color)>0 else Arbapixel('black') for j in range(width)] for i in range(height)]
+        self._model_lock = RLock()
+        self._model = [[Arbapixel(color) if len(color)>0 else Arbapixel('black') for j in range(width)] for i in range(height)]
 
     def copy(self):
         return deepcopy(self)
+
+    def lock(self):
+        self._model_lock.acquire()
+
+    def unlock(self):
+        self._model_lock.release() # throws RuntimeError if an unlock attempt is made while not locked
 
     def get_width(self):
         return self.width
@@ -34,13 +40,10 @@ class Arbamodel(object):
         return self.height
 
     def get_pixel(self, h, w):
-        with self.model_lock:
-            p = self.model[h][w]
-        return p
+        return self._model[h][w]
 
     def set_pixel(self, h, w, color):
-        with self.model_lock:
-            self.model[h][w] = Arbapixel(color)
+        self._model[h][w] = Arbapixel(color)
 
     def get_all_combinations(self):
         return map(tuple, product(range(self.height), range(self.width)))
@@ -48,19 +51,19 @@ class Arbamodel(object):
     def set_all(self, color):
         for w in range(self.width):
             for h in range(self.height):
-                self.model[h][w].set_color(color)
+                self._model[h][w].set_color(color)
 
     def __add__(self, other):
         model = Arbamodel(self.height, self.width)
         for w in range(self.width):
             for h in range(self.height):
-                model.model[h][w] = self.model[h][w] + other.state[h][w]
+                model._model[h][w] = self._model[h][w] + other.state[h][w]
         return model
 
     def __eq__(self, other):
         for w in range(self.width):
             for h in range(self.height):
-                if self.model[h][w] != other.state[h][w]:
+                if self._model[h][w] != other.state[h][w]:
                     return False
         return True
 
@@ -68,24 +71,24 @@ class Arbamodel(object):
         model = Arbamodel(self.height, self.width)
         for w in range(self.width):
             for h in range(self.height):
-                model.model[h][w] = self.model[h][w] - other.state[h][w]
+                model._model[h][w] = self._model[h][w] - other.state[h][w]
         return model
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return str(self.model)
+        return str(self._model)
 
     def __mul__(self, m):
         model = Arbamodel(self.height, self.width)
         for w in range(self.width):
             for h in range(self.height):
-                model.model[h][w] = self.model[h][w]*m
+                model._model[h][w] = self._model[h][w]*m
         return model
 
     def to_json(self):
-        return [[p.to_json() for p in self.model[num_row]] for num_row, row in enumerate(self.model)]
+        return [[p.to_json() for p in self._model[num_row]] for num_row, row in enumerate(self._model)]
 
     def from_json(self, json_model):
         height = len(json_model)
