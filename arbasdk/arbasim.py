@@ -12,7 +12,7 @@ import logging
 from threading import Thread
 from os import environ
 from pygame import display, draw, quit, font, color, init as pygame_init, Rect, QUIT
-from . Rate import Rate
+from . rate import Rate
 
 __all__ = ['Arbasim']
 

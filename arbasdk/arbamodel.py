@@ -8,7 +8,7 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from Arbapixel import Arbapixel
+from arbapixel import Arbapixel
 from copy import deepcopy
 from itertools import product
 from threading import RLock

@@ -1,7 +1,7 @@
-from Arbamodel import Arbamodel
-from Arbapixel import Arbapixel, hsv
-from Arbalink import Arbalink
-from Arbalet import Arbalet
-from Arbasim import Arbasim
-from Arbapp import Arbapp
-from Rate import Rate
+from arbamodel import Arbamodel
+from arbapixel import Arbapixel, hsv
+from arbalink import Arbalink
+from arbalet import Arbalet
+from arbasim import Arbasim
+from arbapp import Arbapp
+from rate import Rate

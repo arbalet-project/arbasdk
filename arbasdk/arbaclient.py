@@ -10,7 +10,7 @@
 
 import zmq
 from threading import Thread
-from . Rate import Rate
+from . rate import Rate
 
 __all__ = ['Arbaclient']
 

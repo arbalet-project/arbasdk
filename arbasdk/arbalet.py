@@ -8,9 +8,9 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from . Arbasim import Arbasim
-from . Arbalink import Arbalink
-from . Arbaclient import Arbaclient
+from . arbasim import Arbasim
+from . arbalink import Arbalink
+from . arbaclient import Arbaclient
 from os import path
 from json import load
 from ConfigParser import RawConfigParser

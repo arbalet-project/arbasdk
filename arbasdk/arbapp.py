@@ -9,8 +9,8 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from Arbalet import Arbalet
-from Arbamodel import Arbamodel
+from arbalet import Arbalet
+from arbamodel import Arbamodel
 from pygame import init as pygame_init
 import argparse, __builtin__
 

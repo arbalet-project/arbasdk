@@ -12,7 +12,7 @@ from threading import Thread, Lock
 from serial import Serial
 from sys import stderr
 from time import sleep
-from . Rate import Rate
+from . rate import Rate
 
 __all__ = ['Arbalink']
 
