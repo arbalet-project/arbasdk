@@ -51,7 +51,7 @@ class Arbamodel(object):
     def set_all(self, color):
         for w in range(self.width):
             for h in range(self.height):
-                self._model[h][w].set_color(color)
+                self.set_pixel(h, w, color)
 
     def __add__(self, other):
         model = Arbamodel(self.height, self.width)
