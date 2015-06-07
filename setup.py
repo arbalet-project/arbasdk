@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
-from arbasdk import __version__
 
 setup(
     name='arbalet',
-    version=__version__,
+    version='0.0.1',
     license="GNU General Public License 3",
     description="Python API and examples for development with Arbalet LED tables (ARduino-BAsed LEd Table)",
     url='http://github.com/arbalet-project',

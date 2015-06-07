@@ -5,5 +5,3 @@ from Arbalet import Arbalet
 from Arbasim import Arbasim
 from Arbapp import Arbapp
 from Rate import Rate
-
-__version__ = "0.0.1"
