@@ -7,7 +7,7 @@ from arbasdk import __version__
 setup(
     name='arbalet',
     version=__version__,
-    license="GNU General Public License 2",
+    license="GNU General Public License 3",
     description="Python API and examples for development with Arbalet LED tables (ARduino-BAsed LEd Table)",
     url='http://github.com/arbalet-project',
     author="Yoan Mollard",
@@ -27,7 +27,7 @@ setup(
         "Topic :: Games/Entertainment",
     ],
 
-    data_files=[('hardware/arduino/arbalink/', ['hardware/arduino/arbalink/arbalink.ino']),  # TODO place in Arduino IDE's default workspace?
+    data_files=[('hardware/arduino/arbalink', ['hardware/arduino/arbalink/arbalink.ino']),  # TODO place in Arduino IDE's default workspace?
                 ('config', ['config/config150.json']),
                 ('config', ['config/default.cfg'])
     ],
