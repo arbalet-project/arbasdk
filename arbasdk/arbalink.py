@@ -13,6 +13,7 @@ from serial import Serial
 from sys import stderr
 from time import sleep
 from . rate import Rate
+from os import name
 
 __all__ = ['Arbalink']
 
@@ -29,12 +30,17 @@ class Arbalink(Thread):
         self.config = config
         self.rate = Rate(self.config['refresh_rate'])
 
+        if name=='nt':  # reserved names: 'posix', 'nt', 'os2', 'ce', 'java', 'riscos'
+            self.platform = 'windows'
+        else:
+            self.platform = 'unix'
+
         if autorun:
             self.start()
 
     def connect(self):
         success = False
-        device = self.config['devices'][self.current_device]
+        device = self.config['devices'][self.platform][self.current_device]
         with self.serial_lock:
             try:
                 self.serial = Serial(device, self.config['speed'], timeout=0)
