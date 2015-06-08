@@ -1,2 +1,3 @@
 include hardware/arduino/arbalink/arbalink.ino
-include config/config150.cfg
+include config/config150.json
+include config/default.cfg
