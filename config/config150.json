@@ -3,7 +3,7 @@
    "unix": ["/dev/ttyACM0", "/dev/ttyACM1"],
    "windows": ["COM11", "COM12"]
  },
- "refresh_rate": 20,
+ "refresh_rate": 50,
  "speed": 1000000,
  "mapping":
    [[14, 15, 44, 45, 74, 75, 104, 105, 134, 135],
