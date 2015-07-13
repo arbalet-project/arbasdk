@@ -11,6 +11,6 @@ Wanna get more information and pictures? Please consult the [Arbalet wiki](https
 The project has just started and is looking for beta-testers and passionate makers, to keep in touch: [![Follow @arbalet_project on Twitter](https://raw.githubusercontent.com/arbalet-project/arbadoc/master/graphical_elements/twitter.png)](https://twitter.com/arbalet_project)
 
 ## ArbaSDK
-Arbalet's source code is organized around three repositories: Arbasdk (Python SDK), [Arbapps](https://github.com/arbalet-project/arbasdk) (Applications) and [Arbadoc](https://github.com/arbalet-project/arbadoc) (Documentation, diagrams and howtos).
+Arbalet's source code is organized around three repositories: Arbasdk (Python SDK), [Arbapps](https://github.com/arbalet-project/arbapps) (Applications) and [Arbadoc](https://github.com/arbalet-project/arbadoc) (Documentation, diagrams and howtos).
 
 ArbaSDK is the Python 2.7 SDK allowing to communicate with the table. Written in object-oriented programming style you basically needs to inherit from the class *Arbapp* to create your own application. It can also be used in an interactive Python session or without Arbapp inheritance. [Browse the software tutorials to get started to the Python SDK](https://github.com/arbalet-project/arbadoc/wiki/Software-tutorials).
