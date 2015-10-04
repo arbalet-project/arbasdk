@@ -101,7 +101,7 @@ class Arbamodel(object):
             for h in range(height):
                 self.set_pixel(h, w, json_model[h][w])
 
-    def write(self, text, foreground, background, vertical, speed=10, font=None):
+    def write(self, text, foreground, background='black', vertical=True, speed=10, font=None):
         """
         Blocking call writing text to the model until scrolling is complete
         Should be used for a punctual text display, instantiating an Arbafont will be more economic
