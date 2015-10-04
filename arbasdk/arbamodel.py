@@ -12,6 +12,8 @@ from arbapixel import Arbapixel
 from copy import deepcopy
 from itertools import product
 from threading import RLock
+from arbafont import Arbafont
+from rate import Rate
 
 __all__ = ['Arbamodel']
 
@@ -98,3 +100,33 @@ class Arbamodel(object):
         for w in range(width):             # TODO Find sth more efficient that constructing objects and browsing lists so much
             for h in range(height):
                 self.set_pixel(h, w, json_model[h][w])
+
+    def write(self, text, foreground, background, vertical, speed=10, font=None):
+        """
+        Blocking call writing text to the model until scrolling is complete
+        Should be used for a punctual text display, instantiating an Arbafont will be more economic
+        :param text: an UTF-8 string representing the text to display
+        :param foreground: foreground color
+        :param background: background color
+        :param vertical: True if the text is rendered vertically
+        :param speed: frequency of update (Hertz)
+        """
+        font = Arbafont(self.height, self.width, vertical, font)
+        rendered = font.render(text)
+        rate = Rate(speed)
+        if vertical:
+            scrolling_range = range(len(rendered.rendered[0]))
+        else:
+            scrolling_range = range(len(rendered.rendered), 0, -1)
+
+        for start in scrolling_range:
+            self.lock()
+            for h in range(self.height):
+                for w in range(self.width):
+                    try:
+                        illuminated = rendered.rendered[h if vertical else h+start][w+start if vertical else w]
+                    except IndexError:
+                        illuminated = False
+                    self.set_pixel(h, w, foreground if illuminated else background)
+            self.unlock()
+            rate.sleep()
