@@ -6,7 +6,7 @@
     Copyright 2015 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
-from pygame.font import Font, get_default_font, init as pygame_init
+from pygame.font import Font, get_default_font, match_font, init as pygame_init
 from pygame import Color
 from struct import unpack
 from numpy import array, rot90
@@ -25,12 +25,18 @@ class Arbafont(object):
 
     def __init__(self, height, width, vertical=False, font=None):
         pygame_init()
-        self._vertical = vertical
+        self.vertical = vertical
         self.height = height
         self.width = width
 
         if font is None:
             font = get_default_font()
+        else:
+            font_file = match_font(font)
+            if font_file is None:
+                raise ValueError("pygame cannot find any file for the selected font {}".format(font))
+            else:
+                font = font_file
 
         if vertical:
             self._size = self._get_ideal_font_size(height, width, font)
@@ -70,17 +76,17 @@ class Arbafont(object):
         flat_mat = self._render_flat(text)
 
         matrix = []
-        for h in range(0, len(flat_mat), len(flat_mat)/(self.height if self._vertical else self.width)):
-            matrix.append(flat_mat[h:h+len(flat_mat)/(self.height if self._vertical else self.width)])
+        for h in range(0, len(flat_mat), len(flat_mat)/(self.height if self.vertical else self.width)):
+            matrix.append(flat_mat[h:h+len(flat_mat)/(self.height if self.vertical else self.width)])
 
         matrix = array(matrix)
-        return RenderedText(matrix if self._vertical else rot90(matrix))
+        return RenderedText(matrix if self.vertical else rot90(matrix))
 
     def print_mat(self, text):
         flat_mat = self._render_flat(text.decode('utf-8'))
         index = 0
-        for h in range(0, len(flat_mat), len(flat_mat)/(self.height if self._vertical else self.width)):
-            for w in range(len(flat_mat)/(self.height if self._vertical else self.width)):
+        for h in range(0, len(flat_mat), len(flat_mat)/(self.height if self.vertical else self.width)):
+            for w in range(len(flat_mat)/(self.height if self.vertical else self.width)):
                 if flat_mat[index]:
                     print '■',
                 else:

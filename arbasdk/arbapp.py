@@ -34,7 +34,14 @@ class Arbapp(object):
         self.height = self.arbalet.height
 
         self.model = Arbamodel(self.height, self.width, 'black')
+        self.init_font(self.model)
         self.set_model(self.model)
+
+    def init_font(self, model):
+        try:
+            model.set_font(self.arbalet.config['font'], self.arbalet.config['vertical'])
+        except KeyError:
+            model.set_font()
 
     def is_interactive(self):
         """

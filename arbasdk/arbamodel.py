@@ -22,6 +22,7 @@ class Arbamodel(object):
     def __init__(self, height, width, color):
         self.height = height
         self.width = width
+        self.font = None
 
         self._model_lock = RLock()
         self._model = [[Arbapixel(color) if len(color)>0 else Arbapixel('black') for j in range(width)] for i in range(height)]
@@ -101,20 +102,28 @@ class Arbamodel(object):
             for h in range(height):
                 self.set_pixel(h, w, json_model[h][w])
 
-    def write(self, text, foreground, background='black', vertical=True, speed=10, font=None):
+    def set_font(self, font=None, vertical=True):
+        """
+        Instantiate the selected (or the default) font to write on this model
+        :param font: Font name (list: pygame.font.get_fonts()
+        :param vertical: True if the text must be displayed in portrait mode, false for landscape mode
+        """
+        self.font = Arbafont(self.height, self.width, vertical, font)
+
+    def write(self, text, foreground, background='black', speed=10):
         """
         Blocking call writing text to the model until scrolling is complete
-        Should be used for a punctual text display, instantiating an Arbafont will be more economic
         :param text: an UTF-8 string representing the text to display
         :param foreground: foreground color
         :param background: background color
-        :param vertical: True if the text is rendered vertically
         :param speed: frequency of update (Hertz)
         """
-        font = Arbafont(self.height, self.width, vertical, font)
-        rendered = font.render(text)
+        if self.font is None:
+            self.set_font()
+
+        rendered = self.font.render(text)
         rate = Rate(speed)
-        if vertical:
+        if self.font.vertical:
             scrolling_range = range(len(rendered.rendered[0]))
         else:
             scrolling_range = range(len(rendered.rendered), 0, -1)
@@ -124,7 +133,7 @@ class Arbamodel(object):
             for h in range(self.height):
                 for w in range(self.width):
                     try:
-                        illuminated = rendered.rendered[h if vertical else h+start][w+start if vertical else w]
+                        illuminated = rendered.rendered[h if self.font.vertical else h+start][w+start if self.font.vertical else w]
                     except IndexError:
                         illuminated = False
                     self.set_pixel(h, w, foreground if illuminated else background)
