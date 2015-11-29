@@ -56,6 +56,12 @@ class Arbamodel(object):
             for h in range(self.height):
                 self.set_pixel(h, w, color)
 
+    def __enter__(self):
+        self.lock()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unlock()
+
     def __add__(self, other):
         model = Arbamodel(self.height, self.width)
         for w in range(self.width):
