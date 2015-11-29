@@ -12,6 +12,7 @@ from threading import Thread
 from serial import Serial
 from sys import stderr
 from time import sleep
+from copy import deepcopy
 from . rate import Rate
 from os import name
 
@@ -78,26 +79,27 @@ class Arbalink(Thread):
                 if self.model:
                     array = bytearray(' '*(self.model.get_height()*self.model.get_width()*3))
                     with self.model:
-                        for h in range(self.model.get_height()):
-                            for w in range(self.model.get_width()):
-                                try:
-                                    idx = self.config['mapping'][h][w]*3 # = mapping shift by 3 colors
-                                except IndexError, e:
-                                    raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
-                                    self.close('config error')
-                                else:
-                                    pixel = self.model.get_pixel(h, w)
-                                    array[idx] = __limit(pixel.r*self.diminution)
-                                    array[idx+1] = __limit(pixel.g*self.diminution)
-                                    array[idx+2] = __limit(pixel.b*self.diminution)
-                        try:
-                            self.serial.write(array) # Write the whole rgb-matrix
-                            #self.serial.readline() # Wait Arduino's feedback
-                        except:
-                            pass
-                        else:
-                            reconnect = False
-                        # serial I/Os while a mutex is locked, oh oh
+                        model = deepcopy(self.model._model)
+
+                    for h in range(self.model.get_height()):
+                        for w in range(self.model.get_width()):
+                            try:
+                                idx = self.config['mapping'][h][w]*3 # = mapping shift by 3 colors
+                            except IndexError, e:
+                                raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
+                                self.close('config error')
+                            else:
+                                pixel = model[h][w]
+                                array[idx] = __limit(pixel.r*self.diminution)
+                                array[idx+1] = __limit(pixel.g*self.diminution)
+                                array[idx+2] = __limit(pixel.b*self.diminution)
+                    try:
+                        self.serial.write(array) # Write the whole rgb-matrix
+                        #self.serial.readline() # Wait Arduino's feedback
+                    except:
+                        pass
+                    else:
+                        reconnect = False
             if reconnect:
                 self.connect_forever()
             else:
