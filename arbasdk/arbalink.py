@@ -86,8 +86,8 @@ class Arbalink(Thread):
                             try:
                                 idx = self.config['mapping'][h][w]*3 # = mapping shift by 3 colors
                             except IndexError, e:
-                                raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
                                 self.close('config error')
+                                raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
                             else:
                                 pixel = model[h][w]
                                 array[idx] = __limit(pixel.r*self.diminution)
