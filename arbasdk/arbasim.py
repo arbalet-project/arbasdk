@@ -121,16 +121,15 @@ class Grid(object):
         screen.lock()
         # Draw pixels
         if model:
-            model.lock()
-            for w in range(model.get_width()):
-                for h in range(model.get_height()):
-                    pixel = model.get_pixel(h, w)
-                    screen.fill(color.Color(pixel.r, pixel.g, pixel.b),
-                                pygame.Rect(w*self.cell_width,
-                                h*self.cell_height,
-                                self.cell_width,
-                                self.cell_height))
-            model.unlock()
+            with model:
+                for w in range(model.get_width()):
+                    for h in range(model.get_height()):
+                        pixel = model.get_pixel(h, w)
+                        screen.fill(color.Color(pixel.r, pixel.g, pixel.b),
+                                    pygame.Rect(w*self.cell_width,
+                                    h*self.cell_height,
+                                    self.cell_width,
+                                    self.cell_height))
         # Draw vertical lines
         for w in range(self.num_cells_wide):
             pygame.draw.line(screen, self.color, (w*self.cell_width, 0), (w*self.cell_width, self.height), self.border_thickness)
