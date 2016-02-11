@@ -118,7 +118,7 @@ class Arbamodel(object):
 
     def write(self, text, foreground, background='black', speed=10):
         """
-        Blocking call writing text to the model until scrolling is complete
+        Blocking and self-locking call writing text to the model until scrolling is complete
         :param text: an UTF-8 string representing the text to display
         :param foreground: foreground color
         :param background: background color
@@ -135,13 +135,12 @@ class Arbamodel(object):
             scrolling_range = range(len(rendered.rendered), 0, -1)
 
         for start in scrolling_range:
-            self.lock()
-            for h in range(self.height):
-                for w in range(self.width):
-                    try:
-                        illuminated = rendered.rendered[h if self.font.vertical else h+start][w+start if self.font.vertical else w]
-                    except IndexError:
-                        illuminated = False
-                    self.set_pixel(h, w, foreground if illuminated else background)
-            self.unlock()
+            with self:
+                for h in range(self.height):
+                    for w in range(self.width):
+                        try:
+                            illuminated = rendered.rendered[h if self.font.vertical else h+start][w+start if self.font.vertical else w]
+                        except IndexError:
+                            illuminated = False
+                        self.set_pixel(h, w, foreground if illuminated else background)
             rate.sleep()
