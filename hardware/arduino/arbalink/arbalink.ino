@@ -35,13 +35,19 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 */
 
+#include <Wire.h>
+#include <SPI.h>
 #include <PololuLedStrip.h>
+#include <Adafruit_CAP1188.h>
 
 #define WIDTH 10
 #define HEIGHT 15
 
 // Create an ledStrip object and specify the pin it will use.
 PololuLedStrip<12> ledStrip;
+
+// Create the connexion to the capacitive sensors
+Adafruit_CAP1188 cap = Adafruit_CAP1188();
 
 // Create a buffer for holding the colors (3 bytes per color).
 rgb_color colors[WIDTH*HEIGHT];
@@ -69,6 +75,7 @@ int readMatrix(int len) {
 
 void setup() {
   cleanup();
+  while(!cap.begin());
   Serial.begin(1000000);
 }
 
@@ -81,6 +88,6 @@ void loop() {
         colors[pixel] = (rgb_color){ matrix[3*pixel], matrix[3*pixel+1], matrix[3*pixel+2] };
       }
     }
-    //Serial.println(num);
+    Serial.println(cap.touched());
     ledStrip.write(colors, WIDTH*HEIGHT);
 }

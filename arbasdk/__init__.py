@@ -6,3 +6,5 @@ from arbasim import Arbasim
 from arbafont import Arbafont
 from arbapp import Arbapp
 from rate import Rate
+
+import events

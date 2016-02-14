@@ -15,6 +15,7 @@ from time import sleep
 from copy import deepcopy
 from . rate import Rate
 from os import name
+from arbasdk.events import create_event
 
 __all__ = ['Arbalink']
 
@@ -95,11 +96,15 @@ class Arbalink(Thread):
                                 array[idx+2] = __limit(pixel.b*self.diminution)
                     try:
                         self.serial.write(array) # Write the whole rgb-matrix
-                        #self.serial.readline() # Wait Arduino's feedback
+                        touch = self.serial.readline() # Wait Arduino's feedback
                     except:
                         pass
                     else:
                         reconnect = False
+                        try:
+                            create_event(int(touch))
+                        except ValueError:
+                            pass
             if reconnect:
                 self.connect_forever()
             else:
