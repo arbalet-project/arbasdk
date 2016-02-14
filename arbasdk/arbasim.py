@@ -118,22 +118,26 @@ class Grid(object):
         self.border_thickness = 1
 
     def render(self, screen, model):
-        screen.lock()
         # Draw pixels
-        if model:
-            with model:
-                for w in range(model.get_width()):
-                    for h in range(model.get_height()):
-                        pixel = model.get_pixel(h, w)
-                        screen.fill(color.Color(pixel.r, pixel.g, pixel.b),
-                                    pygame.Rect(w*self.cell_width,
-                                    h*self.cell_height,
-                                    self.cell_width,
-                                    self.cell_height))
-        # Draw vertical lines
-        for w in range(self.num_cells_wide):
-            pygame.draw.line(screen, self.color, (w*self.cell_width, 0), (w*self.cell_width, self.height), self.border_thickness)
-        # Draw horizontal lines
-        for h in range(self.num_cells_tall):
-            pygame.draw.line(screen, self.color, (0, h*self.cell_height), (self.width, h*self.cell_height), self.border_thickness)
-        screen.unlock()
+        if model is not None:
+            screen.lock()
+            try:
+                with model:
+                    for w in range(model.get_width()):
+                        for h in range(model.get_height()):
+                            pixel = model.get_pixel(h, w)
+                            screen.fill(color.Color(pixel.r, pixel.g, pixel.b),
+                                        pygame.Rect(w*self.cell_width,
+                                        h*self.cell_height,
+                                        self.cell_width,
+                                        self.cell_height))
+                # Draw vertical lines
+                for w in range(self.num_cells_wide):
+                    pygame.draw.line(screen, self.color, (w*self.cell_width, 0), (w*self.cell_width, self.height), self.border_thickness)
+                # Draw horizontal lines
+                for h in range(self.num_cells_tall):
+                    pygame.draw.line(screen, self.color, (0, h*self.cell_height), (self.width, h*self.cell_height), self.border_thickness)
+            except:
+                pass
+            finally:
+                screen.unlock()
