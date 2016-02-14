@@ -7,11 +7,12 @@
     Copyright 2015 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
-import pygame
 import logging
 from threading import Thread
 from os import environ
-from pygame import display, draw, quit, font, color, init as pygame_init, Rect, QUIT
+from os.path import dirname, join
+from pygame import color, init, display, error, font, event, draw, quit, QUIT, Rect
+from pygame.image import load_extended, get_extended
 from . rate import Rate
 
 __all__ = ['Arbasim']
@@ -47,19 +48,26 @@ class Arbasim(Thread):
 
         # Init Pygame
         if self.interactive:
-            pygame_init()
+            init()
         environ['SDL_VIDEO_CENTERED'] = '1'
         logging.info("Pygame initialized")
-        self.screen = pygame.display.set_mode((self.sim_width, self.sim_height), 0, 32)
+        self.screen = display.set_mode((self.sim_width, self.sim_height), 0, 32)
+        if get_extended():
+            try:
+                self.icon = load_extended(join(dirname(__file__), 'icon.png'))
+            except error:
+                raise
+            else:
+                display.set_icon(self.icon)
         self.sim_state = "idle"
-        self.font = pygame.font.SysFont('sans', 14)
+        self.font = font.SysFont('sans', 14)
 
         # Autorun
         if autorun:
             self.start()
 
     def close(self, reason='unknown'):
-        pygame.display.quit()
+        display.quit()
         self.sim_state = "exiting"
         logging.info("Simulator exiting, reason: "+reason)
         self.running = False
@@ -76,13 +84,13 @@ class Arbasim(Thread):
     def run(self):
         # Main Simulation loop
         while self.running:
-            if pygame.event.peek(QUIT): # Shouldn't .get() to avoid emptying the event queue, warning: might fill up the queue if it's never emptied with .get() in the app
+            if event.peek(QUIT): # Shouldn't .get() to avoid emptying the event queue, warning: might fill up the queue if it's never emptied with .get() in the app
                 self.close("User request")
                 break
 
             # Render background and title
-            pygame.draw.rect(self.screen,(0, 0, 0), pygame.Rect(0, 0, self.sim_width+2, self.sim_height+2))
-            pygame.display.set_caption("Arbasim [{}]".format(self.sim_state))
+            draw.rect(self.screen,(0, 0, 0), Rect(0, 0, self.sim_width+2, self.sim_height+2))
+            display.set_caption("Arbasim [{}]".format(self.sim_state))
 
             # Render grid and pixels
             self.grid.render(self.screen, self.arbamodel)
@@ -92,10 +100,10 @@ class Arbasim(Thread):
             #location_caption = pygame.Rect((10,10), (300,20))
             #self.screen.blit(rendered_caption, location_caption)
 
-            pygame.display.update()
+            display.update()
             self.rate.sleep()
         if self.interactive:
-            pygame.quit()
+            quit()
 
 class Grid(object):
     """
@@ -127,16 +135,16 @@ class Grid(object):
                         for h in range(model.get_height()):
                             pixel = model.get_pixel(h, w)
                             screen.fill(color.Color(pixel.r, pixel.g, pixel.b),
-                                        pygame.Rect(w*self.cell_width,
+                                        Rect(w*self.cell_width,
                                         h*self.cell_height,
                                         self.cell_width,
                                         self.cell_height))
                 # Draw vertical lines
                 for w in range(self.num_cells_wide):
-                    pygame.draw.line(screen, self.color, (w*self.cell_width, 0), (w*self.cell_width, self.height), self.border_thickness)
+                    draw.line(screen, self.color, (w*self.cell_width, 0), (w*self.cell_width, self.height), self.border_thickness)
                 # Draw horizontal lines
                 for h in range(self.num_cells_tall):
-                    pygame.draw.line(screen, self.color, (0, h*self.cell_height), (self.width, h*self.cell_height), self.border_thickness)
+                    draw.line(screen, self.color, (0, h*self.cell_height), (self.width, h*self.cell_height), self.border_thickness)
             except:
                 pass
             finally:

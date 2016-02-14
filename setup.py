@@ -28,7 +28,8 @@ setup(
 
     data_files=[('hardware/arduino/arbalink', ['hardware/arduino/arbalink/arbalink.ino']),  # TODO place in Arduino IDE's default workspace?
                 ('config', ['config/config150.json']),
-                ('config', ['config/default.cfg'])
+                ('config', ['config/default.cfg']),
+                ('arbasdk', ['arbasdk/icon.png'])
     ],
 
     packages=find_packages(),
