@@ -7,4 +7,4 @@ from arbafont import Arbafont
 from arbapp import Arbapp
 from rate import Rate
 
-import events
+import sensors

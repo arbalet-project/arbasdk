@@ -10,8 +10,8 @@
 """
 
 from arbalet import Arbalet
-from arbamodel import Arbamodel
 from pygame import init as pygame_init
+from arbasdk.sensors import MODE_OFF
 import argparse, __builtin__
 
 __all__ = ['Arbapp']
@@ -19,23 +19,24 @@ __all__ = ['Arbapp']
 class Arbapp(object):
     app_declared = False  # True when an Arbapp has been instanciated
 
-    def __init__(self, argparser=None, moke_execution=False):
+    def __init__(self, argparser=None, moke_execution=False, touch_mode=MODE_OFF):
         if Arbapp.app_declared:
             raise RuntimeError('Arbapp can be instanciated only once')
 
         Arbapp.app_declared = True
         pygame_init()
         self.read_args(argparser)
-
         self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
-                               self.args.server, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
+                               self.args.server, touch_mode, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
 
         self.width = self.arbalet.width
         self.height = self.arbalet.height
 
-        self.model = Arbamodel(self.height, self.width, 'black')
         self.init_font(self.model)
-        self.set_model(self.model)
+
+    @property
+    def model(self):
+        return self.arbalet.user_model
 
     def init_font(self, model):
         try:
@@ -88,8 +89,6 @@ class Arbapp(object):
         # We parse args normally if running in non-interactive mode, otherwise we ignore args to avoid conflicts with ipython
         self.args = parser.parse_args([] if self.is_interactive() else None)
 
-    def set_model(self, model):
-        self.arbalet.set_model(model)
 
     def run(self):
         raise NotImplementedError("Arbapp.run() must be overidden")

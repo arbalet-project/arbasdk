@@ -18,12 +18,11 @@ from . rate import Rate
 __all__ = ['Arbasim']
 
 class Arbasim(Thread):
-    def __init__(self, arbalet_height, arbalet_width, sim_height, sim_width, rate=30, interactive=True, autorun=True):
+    def __init__(self, arbalet, sim_height, sim_width, rate=30, interactive=True, autorun=True):
         """
         Arbasim constructor: launches the simulation
         Simulate a "arbalet_width x arbalet_height px" table rendered in a "sim_width x sim_height" window
-        :param arbalet_width: Number of pixels of Arbalet in width
-        :param arbalet_height: Number of pixels of Arbalet in height
+        :param arbalet:
         :param sim_width:
         :param sim_height:
         :param rate: Refresh rate in Hertz
@@ -37,14 +36,10 @@ class Arbasim(Thread):
         self.rate = Rate(rate)
         self.interactive = interactive
 
-        # Current table model storing all pixels
-        self.arbamodel = None
-
         self.sim_width = sim_width
         self.sim_height = sim_height
-        self.arbalet_width = arbalet_width
-        self.arbalet_height = arbalet_height
-        self.grid = Grid(sim_width/arbalet_width, sim_height/arbalet_height, arbalet_width, arbalet_height, (40, 40, 40))
+        self.arbalet = arbalet
+        self.grid = Grid(sim_width/arbalet.width, sim_height/arbalet.height, arbalet.width, arbalet.height, (40, 40, 40))
 
         # Init Pygame
         if self.interactive:
@@ -72,15 +67,6 @@ class Arbasim(Thread):
         logging.info("Simulator exiting, reason: "+reason)
         self.running = False
 
-    def set_model(self, arbamodel):
-        """
-        Updates the current model of the simulator
-        :param arbamodel:
-        :return:
-        """
-        self.arbamodel = arbamodel
-        self.sim_state = "running" if arbamodel!=None else "idle"
-
     def run(self):
         # Main Simulation loop
         while self.running:
@@ -93,7 +79,7 @@ class Arbasim(Thread):
             display.set_caption("Arbasim [{}]".format(self.sim_state))
 
             # Render grid and pixels
-            self.grid.render(self.screen, self.arbamodel)
+            self.grid.render(self.screen, self.arbalet.end_model)
 
             #caption = "[{}] Caption...".format(self.sim_state)
             #rendered_caption = self.font.render(caption, 1, (255, 255, 255))

@@ -12,42 +12,41 @@ from threading import Thread
 from serial import Serial
 from sys import stderr
 from time import sleep
-from copy import deepcopy
 from . rate import Rate
 from os import name
-from arbasdk.events import create_event
 
 __all__ = ['Arbalink']
 
 class Arbalink(Thread):
-    def __init__(self, config, diminution=1, autorun=True):
+    def __init__(self, arbalet, touch=None, diminution=1, autorun=True):
         Thread.__init__(self)
         self.setDaemon(True)
-        self.current_device = 0
-        self.serial = None
-        self.model = None
-        self.diminution = diminution
-        self.running = True
-        self.config = config
-        self.rate = Rate(self.config['refresh_rate'])
+        self._current_device = 0
+        self._serial = None
+        self._model = None
+        self._diminution = diminution
+        self._running = True
+        self._arbalet = arbalet
+        self._touch = touch
+        self._rate = Rate(self._arbalet.config['refresh_rate'])
 
         if name=='nt':  # reserved names: 'posix', 'nt', 'os2', 'ce', 'java', 'riscos'
-            self.platform = 'windows'
+            self._platform = 'windows'
         else:
-            self.platform = 'unix'
+            self._platform = 'unix'
 
         if autorun:
             self.start()
 
     def connect(self):
         success = False
-        device = self.config['devices'][self.platform][self.current_device]
+        device = self._arbalet.config['devices'][self._platform][self._current_device]
         try:
-            self.serial = Serial(device, self.config['speed'], timeout=0)
+            self._serial = Serial(device, self._arbalet.config['speed'], timeout=0)
         except Exception, e:
-            print >> stderr, "[Arbalink] Connection to {} at speed {} failed: {}".format(device, self.config['speed'], e.message)
-            self.serial = None
-            self.current_device = (self.current_device+1) % len(self.config['devices'])
+            print >> stderr, "[Arbalink] Connection to {} at speed {} failed: {}".format(device, self._arbalet.config['speed'], e.message)
+            self._serial = None
+            self._current_device = (self._current_device+1) % len(self._arbalet.config['devices'])
         else:
             success = True
         return success
@@ -61,51 +60,49 @@ class Arbalink(Thread):
             sleep(0.05)
         return success
 
-    def set_model(self, arbamodel):
-        self.model = arbamodel
-
     def close(self, reason='unknown'):
-        self.running = False
-        if self.serial:
-            self.serial.close()
-            self.serial = None
+        self._running = False
+        if self._serial:
+            self._serial.close()
+            self._serial = None
 
     def run(self):
         def __limit(v):
             return int(max(0, min(255, v)))
 
-        while(self.running):
+        while(self._running):
             reconnect = True
-            if self.serial and self.serial.isOpen():
-                if self.model:
-                    array = bytearray(' '*(self.model.get_height()*self.model.get_width()*3))
-                    with self.model:
-                        model = deepcopy(self.model._model)
+            if self._serial and self._serial.isOpen():
+                model = self._arbalet.end_model
+                array = bytearray(' '*(model.get_height()*model.get_width()*3))
 
-                    for h in range(self.model.get_height()):
-                        for w in range(self.model.get_width()):
-                            try:
-                                idx = self.config['mapping'][h][w]*3 # = mapping shift by 3 colors
-                            except IndexError, e:
-                                self.close('config error')
-                                raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
-                            else:
-                                pixel = model[h][w]
-                                array[idx] = __limit(pixel.r*self.diminution)
-                                array[idx+1] = __limit(pixel.g*self.diminution)
-                                array[idx+2] = __limit(pixel.b*self.diminution)
-                    try:
-                        self.serial.write(array) # Write the whole rgb-matrix
-                        touch = self.serial.readline() # Wait Arduino's feedback
-                    except:
-                        pass
-                    else:
-                        reconnect = False
+                for h in range(model.get_height()):
+                    for w in range(model.get_width()):
                         try:
-                            create_event(int(touch))
+                            idx = self._arbalet.config['mapping'][h][w]*3 # = mapping shift by 3 colors
+                        except IndexError, e:
+                            self.close('config error')
+                            raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
+                        else:
+                            pixel = model._model[h][w]
+                            array[idx] = __limit(pixel.r*self._diminution)
+                            array[idx+1] = __limit(pixel.g*self._diminution)
+                            array[idx+2] = __limit(pixel.b*self._diminution)
+                try:
+                    self._serial.write(array) # Write the whole rgb-matrix
+                    touch = self._serial.readline() # Wait Arduino's feedback
+                except:
+                    pass
+                else:
+                    reconnect = False
+                    if self._touch is not None:
+                        try:
+                            touch = int(touch)
                         except ValueError:
                             pass
+                        else:
+                            self._touch.create_event(touch)
             if reconnect:
                 self.connect_forever()
             else:
-                self.rate.sleep()
+                self._rate.sleep()

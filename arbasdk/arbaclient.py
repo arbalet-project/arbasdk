@@ -15,7 +15,7 @@ from . rate import Rate
 __all__ = ['Arbaclient']
 
 class Arbaclient(Thread):
-    def __init__(self, server='127.0.0.1', port=33400, rate=30, autorun=True):
+    def __init__(self, arbalet, server='127.0.0.1', port=33400, rate=30, autorun=True):
         Thread.__init__(self)
         self.setDaemon(True)
         self.server = server
@@ -23,6 +23,7 @@ class Arbaclient(Thread):
         self.model = None
         self.running = True
         self.rate = Rate(rate)
+        self.arbalet = arbalet
 
         # Network-related attributes
         self.context = zmq.Context()
@@ -37,11 +38,8 @@ class Arbaclient(Thread):
             self.sender.connect("tcp://{}:{}".format(self.server, self.port))
 
     def send_model(self):
-        if self.model:
+        if self.arbalet.end_model:
             self.sender.send_json(self.model.to_json())
-
-    def set_model(self, model):
-        self.model = model
 
     def close(self, reason='unknown'):
         self.running = False

@@ -63,24 +63,24 @@ class Arbamodel(object):
         self.unlock()
 
     def __add__(self, other):
-        model = Arbamodel(self.height, self.width)
+        model = Arbamodel(self.height, self.width, 'black')
         for w in range(self.width):
             for h in range(self.height):
-                model._model[h][w] = self._model[h][w] + other.state[h][w]
+                model._model[h][w] = self._model[h][w] + other._model[h][w]
         return model
 
     def __eq__(self, other):
         for w in range(self.width):
             for h in range(self.height):
-                if self._model[h][w] != other.state[h][w]:
+                if self._model[h][w] != other._model[h][w]:
                     return False
         return True
 
     def __sub__(self, other):
-        model = Arbamodel(self.height, self.width)
+        model = Arbamodel(self.height, self.width, 'black')
         for w in range(self.width):
             for h in range(self.height):
-                model._model[h][w] = self._model[h][w] - other.state[h][w]
+                model._model[h][w] = self._model[h][w] - other._model[h][w]
         return model
 
     def __repr__(self):
