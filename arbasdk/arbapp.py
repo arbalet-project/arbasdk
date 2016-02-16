@@ -27,8 +27,8 @@ class Arbapp(object):
         pygame_init()
         self.read_args(argparser)
         self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
-                               self.args.server, touch_mode, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
-
+                               self.args.server, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
+        self.arbalet.touch.set_mode(touch_mode)
         self.width = self.arbalet.width
         self.height = self.arbalet.height
 

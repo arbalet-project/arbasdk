@@ -16,18 +16,12 @@ from json import load
 from ConfigParser import RawConfigParser
 from arbasdk import __file__ as sdk_file
 from arbasdk import Arbamodel
-from arbasdk.sensors import MODE_OFF, CapacitiveTouch
+from arbasdk.sensors import CapacitiveTouch
 
 __all__ = ['Arbalet']
 
 class Arbalet(object):
-    def __init__(self, simulation=True, hardware=False, server='', touch_mode=MODE_OFF, diminution=1, factor_sim=30, config='', interactive=True):
-        self.simulation = simulation
-        self.hardware = hardware
-        self.diminution = diminution
-        self.server = server
-        self.touch = CapacitiveTouch(touch_mode)
-
+    def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=30, config='', interactive=True):
         if config=='':
             cfg_path = path.join(path.dirname(sdk_file), '..', 'config', 'default.cfg')
             cfg_parser = RawConfigParser()
@@ -42,22 +36,26 @@ class Arbalet(object):
         with open(config, 'r') as f:
             self.config = load(f)
 
+        self.diminution = diminution
+        self.touch = CapacitiveTouch()
         self.height = len(self.config['mapping'])
         self.width = len(self.config['mapping'][0]) if self.height>0 else 0
         self.user_model = Arbamodel(self.height, self.width, 'black')
-        self.models = [self.user_model]
 
-        if touch_mode is not None:
-            self.models.append(self.touch.model)
+        self._models = {'user': self.user_model,
+                        'touch': self.touch.model}
+        self._simulation = simulation
+        self._hardware = hardware
+        self._server = server
 
-        if self.simulation:
+        if self._simulation:
             self.arbasim = Arbasim(self, self.height*factor_sim, self.width*factor_sim, interactive=interactive)
 
-        if self.hardware:
+        if self._hardware:
             self.arbalink = Arbalink(self, self.touch, diminution=self.diminution)
 
-        if len(self.server)>0:
-            server = self.server.split(':')
+        if len(self._server)>0:
+            server = self._server.split(':')
             if len(server)==2:
                 self.arbaclient = Arbaclient(self, server[0], int(server[1]))
             elif len(server)==1:
@@ -68,20 +66,12 @@ class Arbalet(object):
     @property
     def end_model(self):
         # The final model is the addition of all models of each layer
-        return reduce(Arbamodel.__add__, self.models)
-
-    def set_model(self, model):
-        if self.simulation:
-            self.arbasim.set_model(model if self.touch is None else self.touch.model + model)
-        if self.hardware:
-            self.arbalink.set_model(model if self.touch is None else self.touch.model + model)
-        if len(self.server)>0:
-            self.arbaclient.set_model(model if self.touch is None else self.touch.model + model)
+        return reduce(Arbamodel.__add__, self._models.values())
 
     def close(self, reason='unknown'):
-        if self.simulation:
+        if self._simulation:
             self.arbasim.close(reason)
-        if self.hardware:
+        if self._hardware:
             self.arbalink.close()
-        if len(self.server)>0:
+        if len(self._server)>0:
             self.arbaclient.close(reason)

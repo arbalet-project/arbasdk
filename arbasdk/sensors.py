@@ -27,17 +27,23 @@ class CapacitiveTouch(object):
         self._previous_state = [False]*self.num_buttons
         self._touch_events = []
         self._events_lock = RLock()
-        self._mode = touch_mode
+        self._mode = None
+        self.set_mode(touch_mode)
         self._model = Arbamodel(15, 10, 'black')
+        self._keypad = True
 
     def set_mode(self, new_mode):
         """
         Activate a helper mode by choosing a set of keys to detect
         """
-        if new_mode in [MODE_BI_DIRECTIONAL, MODE_TRI_DIRECTIONAL, MODE_QUADRI_DIRECTIONAL, MODE_COLUMNS, MODE_INDIVIDUAL]:
+        if new_mode in [MODE_OFF, MODE_BI_DIRECTIONAL, MODE_TRI_DIRECTIONAL, MODE_QUADRI_DIRECTIONAL, MODE_COLUMNS, MODE_INDIVIDUAL]:
             self._mode = new_mode
         else:
             raise ValueError("Mode {} is not known to {}".format(new_mode, __file__))
+        self.update_model()
+
+    def set_keypad(self, enabled=True):
+        self._keypad = enabled
 
     def create_event(self, touch):
         """
@@ -56,6 +62,9 @@ class CapacitiveTouch(object):
         self._previous_state = state
 
         # Update the model according to this event
+        self.update_model()
+
+    def update_model(self):
         if self._mode != MODE_OFF:
             mapping = self.get_mapping(self._mode)
             with self.model:
@@ -63,7 +72,7 @@ class CapacitiveTouch(object):
                     if meaning is not None:
                         pixels = self.get_pixels_of_keys(self._mode)[key]
                         for pixel in pixels:
-                            color = self.get_color_active() if state[key-1] else self.get_color()
+                            color = self.get_color_active() if self._previous_state[key-1] else self.get_color()
                             self.model.set_pixel(pixel[0], pixel[1], color)
 
     def get_mapping(self, mode):
@@ -113,4 +122,7 @@ class CapacitiveTouch(object):
     @property
     def model(self):
         # TODO: Model not thread-safe
-        return self._model
+        if self._keypad:
+            return self._model
+        else:
+            return Arbamodel(15, 10, 'black')
