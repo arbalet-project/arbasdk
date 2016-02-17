@@ -73,8 +73,9 @@ class CapacitiveTouch(object):
                     if meaning is not None:
                         pixels = self._config['touch']['keys'][key]
                         for pixel in pixels:
-                            color = self._config['touch']['colors']['active'] if self._previous_state[key] else self._config['touch']['colors']['inactive']
-                            self._model.set_pixel(pixel[0], pixel[1], color)
+                            if self._config['touch']['mapping'][self._mode][key] != 'none':
+                                color = self._config['touch']['colors']['active'] if self._previous_state[key] else self._config['touch']['colors']['inactive']
+                                self._model.set_pixel(pixel[0], pixel[1], color)
 
     def get(self):
         mapping = self._config['touch']['mapping'][self._mode]
