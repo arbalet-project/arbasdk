@@ -37,10 +37,10 @@ class Arbalet(object):
             self.config = load(f)
 
         self.diminution = diminution
-        self.touch = CapacitiveTouch()
         self.height = len(self.config['mapping'])
         self.width = len(self.config['mapping'][0]) if self.height>0 else 0
         self.user_model = Arbamodel(self.height, self.width, 'black')
+        self.touch = CapacitiveTouch(config, self.height, self.width)
 
         self._models = {'user': self.user_model,
                         'touch': self.touch.model}

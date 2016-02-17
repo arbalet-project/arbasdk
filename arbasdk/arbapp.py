@@ -11,7 +11,6 @@
 
 from arbalet import Arbalet
 from pygame import init as pygame_init
-from arbasdk.sensors import MODE_OFF
 import argparse, __builtin__
 
 __all__ = ['Arbapp']
@@ -19,7 +18,7 @@ __all__ = ['Arbapp']
 class Arbapp(object):
     app_declared = False  # True when an Arbapp has been instanciated
 
-    def __init__(self, argparser=None, moke_execution=False, touch_mode=MODE_OFF):
+    def __init__(self, argparser=None, moke_execution=False, touch_mode='off'):
         if Arbapp.app_declared:
             raise RuntimeError('Arbapp can be instanciated only once')
 
