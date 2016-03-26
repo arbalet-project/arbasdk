@@ -17,8 +17,8 @@
 #define PROTOCOL_VERSION 1
 
 unsigned short leds_num = 0;
-char pin_num = 0;
-char touch_type = 0;
+char pin_num = 255;
+char touch_type = 255;
 
 // Create an ledStrip object and specify the pin it will use.
 Adafruit_NeoPixel *pixels = NULL;
@@ -35,8 +35,12 @@ void show_all(byte r=0, byte g=0, byte b=0) {
 void setup() {
   while(!Serial);
   Serial.begin(115200);
-  Serial.setTimeout(5000);
-  handshake();
+  Serial.setTimeout(500);
+  wait_for_connection();
+}
+
+void wait_for_connection() {
+  while(!handshake());
 }
 
 char read_char() {
@@ -59,37 +63,45 @@ void write_short(unsigned short s) {
   Serial.write(s);
 }
 
-void handshake() {
+int handshake() {
   write_char(CMD_HELLO);
-  if(read_char()==CMD_HELLO) {
-    write_char(PROTOCOL_VERSION);
-    leds_num = read_short();  // default: 150
-    pin_num = read_char();    // default: 12
-    touch_type = read_char(); // default: 0 (off)
-    pixels = new Adafruit_NeoPixel(leds_num, pin_num, NEO_GRB + NEO_KHZ800);
-    buffer = (char*) malloc(3*leds_num);
-    pixels->begin();
-    write_short((buffer==0 || pixels==0)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
-  }
-  else {
-    write_char(CMD_ERROR);
-  }
+  if(read_char()!=CMD_HELLO) return 0;
+  write_char(PROTOCOL_VERSION);
+  leds_num = read_short();  // default: 150
+  if(leds_num==0) return 0;
+  pin_num = read_char();    // default: 12
+  if(pin_num==0) return 0;
+  touch_type = read_char(); // default: 0 (off)
+  if(touch_type==255) return 0;
+  pixels = new Adafruit_NeoPixel(leds_num, pin_num, NEO_GRB + NEO_KHZ800);
+  buffer = (char*) malloc(3*leds_num);
+  pixels->begin();
+  write_short((buffer==0 || pixels==0)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
+  return 1;
 }
 
-void read_buffer() {
+int read_buffer() {
   write_char(CMD_BUFFER_READY);
   for(unsigned short led=0; led<leds_num; ++led) {
     short num_read = Serial.readBytes(rgb, 3);
-    for(unsigned short color=0; color<num_read; ++color) {
+    if(num_read!=3) {
+      return 0;
+    }
+    for(unsigned short color=0; color<3; ++color) {
       buffer[3*led+color] = rgb[color];
     }
-  } 
+  }
+  return 1;
 }
 
 void loop() {
-    read_buffer();
-    for(unsigned short led=0; led<leds_num; ++led) {
-      pixels->setPixelColor(led, pixels->Color(buffer[led*3], buffer[led*3+1], buffer[led*3+2]));
+    if(!read_buffer()) {
+      wait_for_connection();
     }
-    pixels->show();
+    else {
+      for(unsigned short led=0; led<leds_num; ++led) {
+        pixels->setPixelColor(led, pixels->Color(buffer[led*3], buffer[led*3+1], buffer[led*3+2]));
+      }
+      pixels->show();
+    }
 }

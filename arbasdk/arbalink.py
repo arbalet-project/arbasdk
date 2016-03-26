@@ -36,6 +36,7 @@ class Arbalink(Thread):
         self.running = True
         self.config = config
         self.rate = Rate(self.config['refresh_rate'])
+        self.connected = False
 
         if name=='nt':  # reserved names: 'posix', 'nt', 'os2', 'ce', 'java', 'riscos'
             self.platform = 'windows'
@@ -46,17 +47,23 @@ class Arbalink(Thread):
             self.start()
 
     def connect(self):
-        success = False
+        if self.serial:
+            self.serial.close()
         device = self.config['devices'][self.platform][self.current_device]
         try:
-            self.serial = Serial(device, self.config['speed'])
-        except Exception, e:
+            self.serial = Serial(device, self.config['speed'], timeout=15)
+        except SerialException, e:
             print >> stderr, "[Arbalink] Connection to {} at speed {} failed: {}".format(device, self.config['speed'], e.message)
             self.serial = None
             self.current_device = (self.current_device+1) % len(self.config['devices'])
+            return False
         else:
-            success = True
-        return success
+            try:
+                self.handshake()
+            except (IOError, SerialException, OSError) as e:
+                print >> stderr, "[Arbalink] Handshake failure: {}".format(e.message)
+                return False
+            return True
 
     def connect_forever(self):
         success = False
@@ -64,8 +71,11 @@ class Arbalink(Thread):
             success = self.connect()
             if success:
                 break
-            sleep(0.05)
+            sleep(0.5)
         return success
+
+    def is_connected(self):
+        return self.serial is not None and self.serial.isOpen() and self.connected
 
     def read_uint8(self):
         return ord(self.read_char())
@@ -86,7 +96,7 @@ class Arbalink(Thread):
         self.serial.write(pack('<h', s))
 
     def handshake(self):
-        sleep(1)
+        self.connected = False
         hello = self.read_char()
         if hello == self.CMD_HELLO:
             self.write_char(self.CMD_HELLO)
@@ -98,12 +108,12 @@ class Arbalink(Thread):
             init_result = self.read_char()
             if init_result == self.CMD_CLIENT_INIT_SUCCESS:
                 print "Arbalet hardware initialization successful"
+                self.connected = True
                 return True
             elif init_result == self.CMD_CLIENT_INIT_FAILURE:
                 raise IOError("Arduino can't allocate memory, init failure")
         else:
-            raise IOError("Expected command {}, got {}".format(self.CMD_HELLO, hello))
-
+            raise IOError("Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
 
     def set_model(self, arbamodel):
         self.model = arbamodel
@@ -141,12 +151,8 @@ class Arbalink(Thread):
             raise IOError("Expected command {}, got {}".format(self.CMD_BUFFER_READY, ready))
 
     def run(self):
-        model_num = 0
-        model_timestamp = time()
         while(self.running):
-            reconnect = True
-
-            if self.serial and self.serial.isOpen():
+            if self.is_connected():
                 if self.model:
                     with self.model:
                         model = deepcopy(self.model._model)
@@ -155,18 +161,8 @@ class Arbalink(Thread):
 
                     try:
                         self.write_serial_frame(array)
-                    except SerialException:
-                        pass
-                    else:
-                        reconnect = False
-                        if model_num%10 == 0:
-                            model_num = 0
-                            #print 10/(time()-model_timestamp)
-                            model_timestamp = time()
-                        model_num += 1
-            if reconnect:
-                self.connect_forever()
-                if not self.handshake():
-                    raise IOError("Handshake failure")
-            else:
+                    except (SerialException, OSError) as e:
+                        self.connected = False
                 self.rate.sleep()
+            else:
+                self.connect_forever()
