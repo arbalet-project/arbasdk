@@ -10,6 +10,7 @@
 
 from threading import Thread
 from serial import Serial, SerialException
+from struct import pack, unpack
 from sys import stderr
 from time import sleep, time
 from copy import deepcopy
@@ -19,6 +20,12 @@ from os import name
 __all__ = ['Arbalink']
 
 class Arbalink(Thread):
+    CMD_HELLO = 'H'
+    CMD_BUFFER_READY = 'B'
+    CMD_CLIENT_INIT_SUCCESS = 'S'
+    CMD_CLIENT_INIT_FAILURE = 'F'
+    PROTOCOL_VERSION = 1
+
     def __init__(self, config, diminution=1, autorun=True):
         Thread.__init__(self)
         self.setDaemon(True)
@@ -60,6 +67,44 @@ class Arbalink(Thread):
             sleep(0.05)
         return success
 
+    def read_uint8(self):
+        return ord(self.read_char())
+
+    def write_uint8(self, i):
+        self.write_char(chr(i))
+
+    def read_char(self):
+        return unpack('<c', self.serial.read())[0]
+
+    def write_char(self, c):
+        self.serial.write(pack('<c', c))
+
+    def read_short(self):
+        return unpack('<h', self.serial.read(2))
+
+    def write_short(self, s):
+        self.serial.write(pack('<h', s))
+
+    def handshake(self):
+        sleep(1)
+        hello = self.read_char()
+        if hello == self.CMD_HELLO:
+            self.write_char(self.CMD_HELLO)
+            version = self.read_uint8()
+            assert version == self.PROTOCOL_VERSION, "Hardware uses protocol v{}, SDK uses protocol v{}".format(version, self.PROTOCOL_VERSION)
+            self.write_short(self.model.get_height()*self.model.get_width())
+            self.write_uint8(self.config['leds_pin_number'])
+            self.write_uint8(0)  # Touch type: No touch feature in this branch
+            init_result = self.read_char()
+            if init_result == self.CMD_CLIENT_INIT_SUCCESS:
+                print "Arbalet hardware initialization successful"
+                return True
+            elif init_result == self.CMD_CLIENT_INIT_FAILURE:
+                raise IOError("Arduino can't allocate memory, init failure")
+        else:
+            raise IOError("Expected command {}, got {}".format(self.CMD_HELLO, hello))
+
+
     def set_model(self, arbamodel):
         self.model = arbamodel
 
@@ -90,7 +135,10 @@ class Arbalink(Thread):
 
     def write_serial_frame(self, frame):
         ready = self.serial.read()
-        self.serial.write(frame)
+        if ready == self.CMD_BUFFER_READY:
+            self.serial.write(frame)
+        elif len(ready)>0:
+            raise IOError("Expected command {}, got {}".format(self.CMD_BUFFER_READY, ready))
 
     def run(self):
         model_num = 0
@@ -118,5 +166,7 @@ class Arbalink(Thread):
                         model_num += 1
             if reconnect:
                 self.connect_forever()
+                if not self.handshake():
+                    raise IOError("Handshake failure")
             else:
                 self.rate.sleep()
