@@ -35,52 +35,50 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 */
 
-#include <PololuLedStrip.h>
+#include <Adafruit_NeoPixel.h>
 
 #define WIDTH 10
 #define HEIGHT 15
+#define PIN 12
+
+#define BUFFER_READY 1
+
+const byte leds_num = WIDTH*HEIGHT;
 
 // Create an ledStrip object and specify the pin it will use.
-PololuLedStrip<12> ledStrip;
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(leds_num, PIN, NEO_GRB + NEO_KHZ800);
+char buffer[WIDTH*HEIGHT*3];
+char rgb[3];
 
-// Create a buffer for holding the colors (3 bytes per color).
-rgb_color colors[WIDTH*HEIGHT];
-char matrix[WIDTH*HEIGHT*3];
-
-
-void cleanup() {
-  byte p;
-  for(p=0; p<WIDTH*HEIGHT; ++p) {
-      colors[p] = (rgb_color){ 0, 0, 0 };
+void show_all(byte r=0, byte g=0, byte b=0) {
+  for(int led=0; led<leds_num; ++led){
+    pixels.setPixelColor(led, pixels.Color(r, g, b));
   }
-  ledStrip.write(colors, WIDTH*HEIGHT);
-}
-
-int readMatrix(int len) {
-  int b = 0;
-  while(b<len) {
-    if(Serial.available()) {
-      matrix[b] = Serial.read();
-      ++b;
-    }
-  }
-  return b;
+  pixels.show();
 }
 
 void setup() {
-  cleanup();
+  pixels.begin();
+  show_all(0, 5, 0);   // Light green
+  while(!Serial);
   Serial.begin(1000000);
+  show_all(0, 0, 0);
+}
+
+void read_buffer() {
+  Serial.write(BUFFER_READY);
+  for(int led=0; led<leds_num; ++led) {
+    byte num_read = Serial.readBytes(rgb, 3);
+    for(byte color=0; color<num_read; ++color) {
+      buffer[3*led+color] = rgb[color];
+    }
+  } 
 }
 
 void loop() {
-    int num = readMatrix(WIDTH*HEIGHT*3);
-    byte h, w;
-    for(h=0; h<HEIGHT; ++h) {
-      for(w=0; w<WIDTH; ++w) {
-        byte pixel = h*WIDTH+w;
-        colors[pixel] = (rgb_color){ matrix[3*pixel], matrix[3*pixel+1], matrix[3*pixel+2] };
-      }
+    read_buffer();
+    for(int led=0; led<leds_num; ++led) {
+      pixels.setPixelColor(led, pixels.Color(buffer[led*3], buffer[led*3+1], buffer[led*3+2]));
     }
-    //Serial.println(num);
-    ledStrip.write(colors, WIDTH*HEIGHT);
+    pixels.show();
 }

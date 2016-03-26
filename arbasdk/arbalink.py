@@ -9,9 +9,9 @@
 """
 
 from threading import Thread
-from serial import Serial
+from serial import Serial, SerialException
 from sys import stderr
-from time import sleep
+from time import sleep, time
 from copy import deepcopy
 from . rate import Rate
 from os import name
@@ -42,7 +42,7 @@ class Arbalink(Thread):
         success = False
         device = self.config['devices'][self.platform][self.current_device]
         try:
-            self.serial = Serial(device, self.config['speed'], timeout=0)
+            self.serial = Serial(device, self.config['speed'])
         except Exception, e:
             print >> stderr, "[Arbalink] Connection to {} at speed {} failed: {}".format(device, self.config['speed'], e.message)
             self.serial = None
@@ -69,37 +69,53 @@ class Arbalink(Thread):
             self.serial.close()
             self.serial = None
 
-    def run(self):
+    def get_serial_frame(self, model):
         def __limit(v):
             return int(max(0, min(255, v)))
 
+        array = bytearray(' '*(self.model.get_height()*self.model.get_width()*3))
+        for h in range(self.model.get_height()):
+            for w in range(self.model.get_width()):
+                try:
+                    idx = self.config['mapping'][h][w]*3 # = mapping shift by 3 colors
+                except IndexError, e:
+                    self.close('config error')
+                    raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
+                else:
+                    pixel = model[h][w]
+                    array[idx] = __limit(pixel.r*self.diminution)
+                    array[idx+1] = __limit(pixel.g*self.diminution)
+                    array[idx+2] = __limit(pixel.b*self.diminution)
+        return array
+
+    def write_serial_frame(self, frame):
+        ready = self.serial.read()
+        self.serial.write(frame)
+
+    def run(self):
+        model_num = 0
+        model_timestamp = time()
         while(self.running):
             reconnect = True
+
             if self.serial and self.serial.isOpen():
                 if self.model:
-                    array = bytearray(' '*(self.model.get_height()*self.model.get_width()*3))
                     with self.model:
                         model = deepcopy(self.model._model)
 
-                    for h in range(self.model.get_height()):
-                        for w in range(self.model.get_width()):
-                            try:
-                                idx = self.config['mapping'][h][w]*3 # = mapping shift by 3 colors
-                            except IndexError, e:
-                                self.close('config error')
-                                raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
-                            else:
-                                pixel = model[h][w]
-                                array[idx] = __limit(pixel.r*self.diminution)
-                                array[idx+1] = __limit(pixel.g*self.diminution)
-                                array[idx+2] = __limit(pixel.b*self.diminution)
+                    array = self.get_serial_frame(model)
+
                     try:
-                        self.serial.write(array) # Write the whole rgb-matrix
-                        #self.serial.readline() # Wait Arduino's feedback
-                    except:
+                        self.write_serial_frame(array)
+                    except SerialException:
                         pass
                     else:
                         reconnect = False
+                        if model_num%10 == 0:
+                            model_num = 0
+                            #print 10/(time()-model_timestamp)
+                            model_timestamp = time()
+                        model_num += 1
             if reconnect:
                 self.connect_forever()
             else:
