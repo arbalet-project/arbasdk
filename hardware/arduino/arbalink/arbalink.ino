@@ -76,7 +76,7 @@ int handshake() {
   pixels = new Adafruit_NeoPixel(leds_num, pin_num, NEO_GRB + NEO_KHZ800);
   buffer = (char*) malloc(3*leds_num);
   pixels->begin();
-  write_short((buffer==0 || pixels==0)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
+  write_char((buffer==0 || pixels==0)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
   return 1;
 }
 
