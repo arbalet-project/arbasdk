@@ -26,8 +26,7 @@ setup(
         "Topic :: Games/Entertainment",
     ],
 
-    data_files=[('hardware/arduino/arbalink', ['hardware/arduino/arbalink/arbalink.ino']),  # TODO place in Arduino IDE's default workspace?
-                ('config', ['config/config150.json']),
+    data_files=[('config', ['config/config150.json']),
                 ('config', ['config/default.cfg']),
                 ('arbasdk', ['arbasdk/icon.png'])
     ],
