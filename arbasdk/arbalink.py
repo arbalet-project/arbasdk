@@ -21,9 +21,10 @@ __all__ = ['Arbalink']
 class Arbalink(Thread):
     CMD_HELLO = 'H'
     CMD_BUFFER_READY = 'B'
+    CMD_BUFFER_READY_DATA_FOLLOWS = 'D'
     CMD_CLIENT_INIT_SUCCESS = 'S'
     CMD_CLIENT_INIT_FAILURE = 'F'
-    PROTOCOL_VERSION = 1
+    PROTOCOL_VERSION = 2
     
     def __init__(self, arbalet, touch=None, diminution=1, autorun=True):
         Thread.__init__(self)
@@ -89,10 +90,10 @@ class Arbalink(Thread):
         self._serial.write(pack('<c', c))
 
     def read_short(self):
-        return unpack('<h', self._serial.read(2))
+        return unpack('<H', self._serial.read(2))[0]
 
     def write_short(self, s):
-        self._serial.write(pack('<h', s))
+        self._serial.write(pack('<H', s))
 
     def handshake(self):
         self._connected = False
@@ -103,7 +104,7 @@ class Arbalink(Thread):
             assert version == self.PROTOCOL_VERSION, "Hardware uses protocol v{}, SDK uses protocol v{}".format(version, self.PROTOCOL_VERSION)
             self.write_short(self._arbalet.end_model.get_height()*self._arbalet.end_model.get_width())
             self.write_uint8(self._arbalet.config['leds_pin_number'])
-            self.write_uint8(0)  # Touch type: No touch feature in this branch
+            self.write_uint8(self._arbalet.config['touch']['type'])
             init_result = self.read_char()
             if init_result == self.CMD_CLIENT_INIT_SUCCESS:
                 print "Arbalet hardware initialization successful"
@@ -140,20 +141,35 @@ class Arbalink(Thread):
                     array[idx+2] = __limit(pixel.b*self._diminution)
         return array
 
+    def read_touch_frame(self):
+        touch_int = self.read_short()
+        print "touch", touch_int
+        num_keys = self._arbalet.config['touch']['type']
+        for key in range(num_keys):
+            key_state = self.read_short()
+            print "key", key, key_state
+            # TODO: Filtered data can be used here instead of touch_int for calibration purposes
+        if self._touch is not None:
+            self._touch.create_event(touch_int)
+
     def write_serial_frame(self, frame):
-        ready = self._serial.read()
-        if ready == self.CMD_BUFFER_READY:
+        ready = self.read_char()
+        commands = [self.CMD_BUFFER_READY, self.CMD_BUFFER_READY_DATA_FOLLOWS]
+        if ready in commands:
             self._serial.write(frame)
         elif len(ready)>0:
-            raise IOError("Expected command {}, got {}".format(self.CMD_BUFFER_READY, ready))
+            raise IOError("Expected one command of {}, got {}".format(commands, ready))
+        data_follows = ready == self.CMD_BUFFER_READY_DATA_FOLLOWS
+        return data_follows
 
     def run(self):
         while(self._running):
             if self.is_connected():
                 array = self.get_serial_frame()
-
                 try:
-                    self.write_serial_frame(array)
+                    data_follows = self.write_serial_frame(array)
+                    if data_follows:
+                        self.read_touch_frame()
                 except (SerialException, OSError) as e:
                     self._connected = False
                 self._rate.sleep()

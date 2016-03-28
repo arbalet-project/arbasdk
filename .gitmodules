@@ -1,0 +1,6 @@
+[submodule "hardware/arduino/Adafruit_NeoPixel"]
+	path = hardware/arduino/Adafruit_NeoPixel
+	url = https://github.com/adafruit/Adafruit_NeoPixel.git
+[submodule "hardware/arduino/Adafruit_MPR121"]
+	path = hardware/arduino/Adafruit_MPR121
+	url = https://github.com/adafruit/Adafruit_MPR121.git

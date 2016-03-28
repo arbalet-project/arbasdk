@@ -27,8 +27,6 @@ Adafruit_NeoPixel *pixels = NULL;
 Adafruit_MPR121 *touch = NULL;
 char *buffer;
 char rgb[3];
-uint16_t touch_int = 0;  // Stores a boolean status for each touch input
-uint16_t *touch_values = NULL;
 
 void show_all(byte r=0, byte g=0, byte b=0) {
   for(unsigned short led=0; led<leds_num; ++led){
@@ -40,7 +38,7 @@ void show_all(byte r=0, byte g=0, byte b=0) {
 void setup() {
   while(!Serial);
   Serial.begin(115200);
-  Serial.setTimeout(500);
+  Serial.setTimeout(3000);
   wait_for_connection();
 }
 
@@ -58,14 +56,14 @@ void write_char(char c) {
   Serial.write(c);
 }
 
-unsigned short read_short() {
-  unsigned short s=0;
+uint16_t read_short() {
+  uint16_t s=0;
   Serial.readBytes((char*)&s, 2);
   return s;
 }
 
-void write_short(unsigned short s) {
-  Serial.write(s);
+void write_short(uint16_t s) {
+  Serial.write((uint8_t *)&s, 2);
 }
 
 boolean handshake() {
@@ -80,11 +78,10 @@ boolean handshake() {
   if(touch_type==255) return false;
   pixels = new Adafruit_NeoPixel(leds_num, pin_num, NEO_GRB + NEO_KHZ800);
   touch = new Adafruit_MPR121();
-  touch_values = malloc(size_of(*touch_values)*touch_type);
   buffer = (char*) malloc(3*leds_num);
   pixels->begin();
   boolean touch_init = touch? touch->begin() : false;
-  write_char((buffer==NULL || pixels==NULL || touch_init==false || touch_values==NULL)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
+  write_char((buffer==NULL || pixels==NULL || touch_init==false)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
   return true;
 }
 
@@ -102,14 +99,12 @@ boolean read_buffer(char readiness) {
   return true;
 }
 
-void read_touch_sensors() {
-    write_short(cap.touched());
-    for(char id=0; id<touch_type; ++id) {
-      write_short(cap.filtered(id));
+void send_touch_frame() {
+    write_short(touch->touched());
+    for(char key=0; key<touch_type; ++key) {
+      write_short(touch->filteredData(key));
     }
 }
-
-
 
 void update_leds_from_buffer() {
   for(unsigned short led=0; led<leds_num; ++led) {
@@ -119,12 +114,11 @@ void update_leds_from_buffer() {
 }
 
 void loop() {
-    if(!read_buffer(CMD_BUFFER_READY_DATA_FOLLOWS)) {
-      wait_for_connection();
+    if(read_buffer(CMD_BUFFER_READY_DATA_FOLLOWS)) {
+      send_touch_frame();
+      update_leds_from_buffer();
     }
     else {
-      update_leds_from_buffer();
-      read_touch_sensors();
-      write_touch_frame();
+      wait_for_connection();
     }
 }
