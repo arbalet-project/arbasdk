@@ -10,7 +10,7 @@
 
 from threading import Thread
 from serial import Serial, SerialException
-from struct import pack, unpack
+from struct import pack, unpack, error
 from sys import stderr
 from time import sleep, time
 from copy import deepcopy
@@ -51,7 +51,7 @@ class Arbalink(Thread):
             self.serial.close()
         device = self.config['devices'][self.platform][self.current_device]
         try:
-            self.serial = Serial(device, self.config['speed'], timeout=15)
+            self.serial = Serial(device, self.config['speed'], timeout=3)
         except SerialException, e:
             print >> stderr, "[Arbalink] Connection to {} at speed {} failed: {}".format(device, self.config['speed'], e.message)
             self.serial = None
@@ -97,7 +97,10 @@ class Arbalink(Thread):
 
     def handshake(self):
         self.connected = False
-        hello = self.read_char()
+        try:
+            hello = self.read_char()
+        except error, e:  # Connection timeout will raise a struct.error exception when decoding
+            raise IOError("Unable to read data from hardware, is Arbalink firmware loaded onto Arduino?")
         if hello == self.CMD_HELLO:
             self.write_char(self.CMD_HELLO)
             version = self.read_uint8()
