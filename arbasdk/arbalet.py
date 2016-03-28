@@ -33,8 +33,13 @@ class Arbalet(object):
         if not path.isfile(config):
             raise Exception("Config file '{}' not found".format(config))
 
-        with open(config, 'r') as f:
-            self.config = load(f)
+        try:
+            with open(config, 'r') as f:
+                self.config = load(f)
+        except ValueError, e:
+            raise ValueError("Your configuration file {} has an incorrect format, make sure it is a valid JSON. {}".format(config, e.message))
+        except IOError, e:
+            raise IOError("Configuration file {} can't be read. {}".format(config, e.message))
 
         self.diminution = diminution
         self.height = len(self.config['mapping'])
