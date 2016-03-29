@@ -20,7 +20,6 @@ class Arbaclient(Thread):
         self.setDaemon(True)
         self.server = server
         self.port = str(port)
-        self.model = None
         self.running = True
         self.rate = Rate(rate)
         self.arbalet = arbalet
@@ -38,8 +37,7 @@ class Arbaclient(Thread):
             self.sender.connect("tcp://{}:{}".format(self.server, self.port))
 
     def send_model(self):
-        if self.arbalet.end_model:
-            self.sender.send_json(self.model.to_json())
+        self.sender.send_json(self.arbalet.end_model.to_json())
 
     def close(self, reason='unknown'):
         self.running = False
