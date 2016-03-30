@@ -66,6 +66,21 @@ void write_short(uint16_t s) {
   Serial.write((uint8_t *)&s, 2);
 }
 
+void free_allocated_memory() {
+  if(pixels!=NULL) {
+    delete(pixels);
+    pixels = NULL;
+  }
+  if(touch!=NULL) {
+    delete(touch);
+    touch = NULL;
+  }
+  if(buffer!=NULL) {
+    free(buffer);
+    buffer = NULL;
+  }
+}
+
 boolean handshake() {
   write_char(CMD_HELLO);
   if(read_char()!=CMD_HELLO) return false;
@@ -76,6 +91,9 @@ boolean handshake() {
   if(pin_num==0) return false;
   touch_type = read_char(); // default: 0 (off)
   if(touch_type==255) return false;
+  
+  /* Memory allocation */
+  free_allocated_memory();  // TODO, do not free, updating existing objects would be faster
   pixels = new Adafruit_NeoPixel(leds_num, pin_num, NEO_GRB + NEO_KHZ800);
   touch = new Adafruit_MPR121();
   buffer = (char*) malloc(3*leds_num);

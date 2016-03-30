@@ -112,6 +112,8 @@ class Arbalink(Thread):
                 return True
             elif init_result == self.CMD_CLIENT_INIT_FAILURE:
                 raise IOError("Arduino can't allocate memory, init failure")
+            else:
+                raise IOError("Expected one command of {}, got {}".format([self.CMD_CLIENT_INIT_SUCCESS, self.CMD_CLIENT_INIT_FAILURE], init_result))
         else:
             raise IOError("Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
 
