@@ -63,6 +63,17 @@ void write_short(unsigned short s) {
   Serial.write(s);
 }
 
+void free_allocated_memory() {
+  if(pixels!=NULL) {
+    delete(pixels);
+    pixels = NULL;
+  }
+  if(buffer!=NULL) {
+    free(buffer);
+    buffer = NULL;
+  }
+}
+
 int handshake() {
   write_char(CMD_HELLO);
   if(read_char()!=CMD_HELLO) return 0;
@@ -73,6 +84,11 @@ int handshake() {
   if(pin_num==0) return 0;
   touch_type = read_char(); // default: 0 (off)
   if(touch_type==255) return 0;
+  
+  /* Memory allocation */
+  free_allocated_memory();
+  // TODO: Do not free, updating existing objects could make connection faster with a Leonardo since connection does not reset the board
+  
   pixels = new Adafruit_NeoPixel(leds_num, pin_num, NEO_GRB + NEO_KHZ800);
   buffer = (char*) malloc(3*leds_num);
   pixels->begin();
