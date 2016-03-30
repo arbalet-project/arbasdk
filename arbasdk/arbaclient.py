@@ -39,6 +39,14 @@ class Arbaclient(Thread):
     def send_model(self):
         self.sender.send_json(self.arbalet.end_model.to_json())
 
+    def receive_touch(self):
+        touch_frame = self.sender.recv_json()
+        touch_int = touch_frame[0]
+        # For calibrated mode, reading the filtered data of keys is necessary
+        # for key in range(1, self.arbalet.config["touch_type"]):
+        #     pass
+        self.arbalet.touch.create_event(touch_int)
+
     def close(self, reason='unknown'):
         self.running = False
 
@@ -46,5 +54,6 @@ class Arbaclient(Thread):
         self.connect()
         while self.running:
             self.send_model()
+            self.receive_touch()
             self.rate.sleep()
         self.sender.close()

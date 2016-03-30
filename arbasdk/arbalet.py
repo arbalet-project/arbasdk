@@ -53,6 +53,11 @@ class Arbalet(object):
         self._hardware = hardware
         self._server = server
 
+        # Start connection to real, simulated, or network LED table
+        self.arbasim = None
+        self.arbalink = None
+        self.arbaclient = None
+
         if self._simulation:
             self.arbasim = Arbasim(self, self.height*factor_sim, self.width*factor_sim, interactive=interactive)
 

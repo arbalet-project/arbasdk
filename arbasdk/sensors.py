@@ -23,6 +23,8 @@ class CapacitiveTouch(object):
         self._num_buttons = len(self._config['touch']['keys']) if self._config['touch']['enabled'] else 0  # 0 button means touch-disabled hardware
         self._previous_state = [False]*self._num_buttons
         self._touch_events = []
+        self._touch_int = 0  # Last touch state
+        self._touch_keys = []  # Filtered data of last touched keys
         self._events_lock = RLock()
         self._keypad = True
         self._height = height
@@ -44,9 +46,10 @@ class CapacitiveTouch(object):
     def set_keypad(self, enabled=True):
         self._keypad = enabled
 
-    def create_event(self, touch):
+    def create_event(self, touch, keys=[]):
         """
-        Create the event associated to the specified touch state
+        Entry point of the table connection interface
+        Create the event associated to the specified touch state, and, if calibration enable, to the list of filtered keys data
         """
         def touch_to_buttons(touch):
             return [(touch & (1 << bit)) > 0 for bit in range(self._num_buttons)]
@@ -63,6 +66,16 @@ class CapacitiveTouch(object):
         # Update the model according to this event
         self.update_model()
 
+        self._touch_int = touch
+        self._touch_keys = keys
+
+    def get_touch_frame(self):
+        """
+        Return the low-level touch frame consisting into a touch int and a list of filtered values for each touch key in calibrated mode
+        :return: (touch_int, touch_key_list]
+        """
+        return (self._touch_int, self._touch_keys)
+
     def update_model(self):
         if self._mode == 'off' or self._num_buttons == 0 or not self._keypad:
             self.model.set_all('black')
@@ -78,6 +91,10 @@ class CapacitiveTouch(object):
                                 self._model.set_pixel(pixel[0], pixel[1], color)
 
     def get(self):
+        """
+        Entry points of apps to get the touch events mapped according to current touch mode
+        :return: list of events (dictionary)
+        """
         mapping = self._config['touch']['mapping'][self._mode]
 
         with self._events_lock:
