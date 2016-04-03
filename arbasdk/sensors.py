@@ -26,11 +26,13 @@ class CapacitiveTouch(object):
         self._touch_int = 0  # Last touch state
         self._touch_keys = []  # Filtered data of last touched keys
         self._events_lock = RLock()
+        self._mode_lock = RLock()
         self._keypad = True
         self._height = height
         self._width = width
         self._model = Arbamodel(self._height, self._width, 'black')
         self._mode = None
+        self._old_touch_mode = 'off'  # Store the former touch mode to be able to pause or resume the touch capability
         self.set_mode(touch_mode)
 
     def set_mode(self, new_mode):
@@ -38,7 +40,8 @@ class CapacitiveTouch(object):
         Activate a helper mode by choosing a set of keys to detect
         """
         if new_mode in self.modes:
-            self._mode = new_mode
+            with self._mode_lock:
+                self._mode = new_mode
         else:
             raise ValueError("Mode {} is unknown, should be one of {}".format(new_mode, str(self.modes)))
         self.update_model()
@@ -77,25 +80,29 @@ class CapacitiveTouch(object):
         return (self._touch_int, self._touch_keys)
 
     def update_model(self):
-        if self._mode == 'off' or self._num_buttons == 0 or not self._keypad:
-            self.model.set_all('black')
-        else:
-            mapping = self._config['touch']['mapping'][self._mode]
-            with self._model:
-                for key, meaning in enumerate(mapping):
-                    if meaning is not None:
-                        pixels = self._config['touch']['keys'][key]
-                        for pixel in pixels:
-                            if self._config['touch']['mapping'][self._mode][key] != 'none':
-                                color = self._config['touch']['colors']['active'] if self._previous_state[key] else self._config['touch']['colors']['inactive']
-                                self._model.set_pixel(pixel[0], pixel[1], color)
+        with self._mode_lock:
+            if self._mode == 'off' or self._num_buttons == 0 or not self._keypad:
+                self.model.set_all('black')
+            else:
+                mapping = self._config['touch']['mapping'][self._mode]
+                with self._model:
+                    for key, meaning in enumerate(mapping):
+                        if meaning is not None:
+                            pixels = self._config['touch']['keys'][key]
+                            for pixel in pixels:
+                                if self._config['touch']['mapping'][self._mode][key] != 'none':
+                                    color = self._config['touch']['colors']['active'] if self._previous_state[key] else self._config['touch']['colors']['inactive']
+                                    self._model.set_pixel(pixel[0], pixel[1], color)
 
     def get(self):
         """
         Entry points of apps to get the touch events mapped according to current touch mode
         :return: list of events (dictionary)
         """
-        mapping = self._config['touch']['mapping'][self._mode]
+        with self._mode_lock:
+            if self._mode == 'off':
+                return []
+            mapping = self._config['touch']['mapping'][self._mode]
 
         with self._events_lock:
             events = self.map_events(self._touch_events, mapping)
@@ -112,7 +119,19 @@ class CapacitiveTouch(object):
                                 'type': 'down' if down else 'up' })
         return events
 
+    def toggle_touch(self):
+        """
+        Temporarily pause or restore the touch feature
+        If this application is not touch compatible, this method has no effect since it will switch between off and
+        """
+        current_mode = self._mode
+        self.set_mode(self._old_touch_mode)
+        self._old_touch_mode = current_mode
+
     @property
     def model(self):
         return self._model
 
+    @property
+    def mode(self):
+        return self._mode

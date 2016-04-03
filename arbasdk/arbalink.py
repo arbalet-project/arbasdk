@@ -26,7 +26,13 @@ class Arbalink(Thread):
     CMD_CLIENT_INIT_FAILURE = 'F'
     PROTOCOL_VERSION = 2
     
-    def __init__(self, arbalet, touch=None, diminution=1, autorun=True):
+    def __init__(self, arbalet, diminution=1, autorun=True):
+        """
+        Create a thread in charge of the serial connection to hardware
+        :param arbalet: The reference to arbalet controller (its touch interface can be modified)
+        :param diminution: Brightness of the table from 0.0 to 1.0
+        :param autorun: Start automatically
+        """
         Thread.__init__(self)
         self.setDaemon(True)
         self._current_device = 0
@@ -34,7 +40,6 @@ class Arbalink(Thread):
         self._diminution = diminution
         self._running = True
         self._arbalet = arbalet
-        self._touch = touch
         self._rate = Rate(self._arbalet.config['refresh_rate'])
         self._connected = False
 
@@ -149,8 +154,8 @@ class Arbalink(Thread):
         for key in range(num_keys):
             key_state = self.read_short()
             # TODO: Filtered data can be used here instead of touch_int for calibration purposes
-        if self._touch is not None:
-            self._touch.create_event(touch_int)
+        if self._arbalet.touch is not None:
+            self._arbalet.touch.create_event(touch_int)
 
     def write_serial_frame(self, frame):
         ready = self.read_char()

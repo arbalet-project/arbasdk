@@ -11,6 +11,7 @@
 from . arbasim import Arbasim
 from . arbalink import Arbalink
 from . arbaclient import Arbaclient
+from . events import Events
 from os import path
 from json import load
 from ConfigParser import RawConfigParser
@@ -41,17 +42,19 @@ class Arbalet(object):
         except IOError, e:
             raise IOError("Configuration file {} can't be read. {}".format(config, e.message))
 
+        self._simulation = simulation
+        self._hardware = hardware
+        self._server = server
+
         self.diminution = diminution
         self.height = len(self.config['mapping'])
         self.width = len(self.config['mapping'][0]) if self.height>0 else 0
         self.user_model = Arbamodel(self.height, self.width, 'black')
         self.touch = CapacitiveTouch(config, self.height, self.width)
+        self.events = Events(self, True)
 
         self._models = {'user': self.user_model,
                         'touch': self.touch.model}
-        self._simulation = simulation
-        self._hardware = hardware
-        self._server = server
 
         # Start connection to real, simulated, or network LED table
         self.arbasim = None
@@ -62,7 +65,7 @@ class Arbalet(object):
             self.arbasim = Arbasim(self, self.height*factor_sim, self.width*factor_sim, interactive=interactive)
 
         if self._hardware:
-            self.arbalink = Arbalink(self, self.touch, diminution=self.diminution)
+            self.arbalink = Arbalink(self, self.diminution)
 
         if len(self._server)>0:
             server = self._server.split(':')
