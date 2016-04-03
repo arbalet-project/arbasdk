@@ -18,6 +18,7 @@ from ConfigParser import RawConfigParser
 from arbasdk import __file__ as sdk_file
 from arbasdk import Arbamodel
 from arbasdk.sensors import CapacitiveTouch
+from threading import RLock
 
 __all__ = ['Arbalet']
 
@@ -51,6 +52,8 @@ class Arbalet(object):
         self.width = len(self.config['mapping'][0]) if self.height>0 else 0
         self.user_model = Arbamodel(self.height, self.width, 'black')
         self.touch = CapacitiveTouch(config, self.height, self.width)
+        self.sdl_lock = RLock()  # Temporary hack to lock pygame calls using SDL before we create a centralized event manager for joystick and so on
+
         self.events = Events(self, True)
 
         self._models = {'user': self.user_model,
@@ -62,7 +65,7 @@ class Arbalet(object):
         self.arbaclient = None
 
         if self._simulation:
-            self.arbasim = Arbasim(self, self.height*factor_sim, self.width*factor_sim, interactive=interactive)
+            self.arbasim = Arbasim(self, self.height*factor_sim, self.width*factor_sim)
 
         if self._hardware:
             self.arbalink = Arbalink(self, self.diminution)
@@ -83,8 +86,9 @@ class Arbalet(object):
 
     def close(self, reason='unknown'):
         if self._simulation:
-            self.arbasim.close(reason)
+            self.arbasim.close()
         if self._hardware:
             self.arbalink.close()
         if len(self._server)>0:
-            self.arbaclient.close(reason)
+            self.arbaclient.close()
+        self.events.close()

@@ -18,26 +18,28 @@ class Events(Thread):
         :return:
         """
         Thread.__init__(self)
-        init()
         self.setDaemon(True)
         self._system_events = []
         self._user_events = []
         self._user_events_lock = RLock()
-        self._rate = Rate(arbalet.config['refresh_rate'])
         self._arbalet = arbalet
+        self._rate = Rate(self._arbalet.config['refresh_rate'])
         self._runtime_control = runtime_control
         self.running = False
 
         # All joysticks are enabled by default
-        joystick.init()
-        for j in range(joystick.get_count()):
-            joy = joystick.Joystick(j)
-            joy.init()
+        with self._arbalet.sdl_lock:
+            init()
+            joystick.init()
+            for j in range(joystick.get_count()):
+                joy = joystick.Joystick(j)
+                joy.init()
 
         self.start()
 
     def _get_pygame_events(self):
-        events = event.get()
+        with self._arbalet.sdl_lock:
+            events = event.get()
         self._system_events = self._system_events + events
 
         with self._user_events_lock:
@@ -85,4 +87,5 @@ class Events(Thread):
                         self._arbalet.touch.toggle_touch()
                         break
             self._rate.sleep()
-        quit()
+        with self._arbalet.sdl_lock:
+            quit()
