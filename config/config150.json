@@ -37,7 +37,7 @@
         "bidirectional": ["right", "right", "none", "left", "left", "none"],
         "tridirectional": ["right", "right", "none", "left", "left", "up"],
         "quadridirectional": ["right", "none", "down", "none", "left", "up"],
-        "columns": ["none", 2, 4, 1, 3, 5],
+        "columns": [5, 4, 3, 2, 1, "none"],
         "individual": [1, 2, 3, 4, 5, 6]},
      "colors": {
        "active":   [150, 150, 150],

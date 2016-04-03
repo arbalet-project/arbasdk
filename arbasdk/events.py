@@ -87,5 +87,3 @@ class Events(Thread):
                         self._arbalet.touch.toggle_touch()
                         break
             self._rate.sleep()
-        with self._arbalet.sdl_lock:
-            quit()
