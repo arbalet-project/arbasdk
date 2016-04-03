@@ -27,7 +27,7 @@ class Arbapp(object):
         self.read_args(argparser)
         self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
                                self.args.server, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
-        self.arbalet.touch.set_mode(touch_mode)
+        self.arbalet.touch.set_mode('off' if self.args.no_touch else touch_mode)
         self.width = self.arbalet.width
         self.height = self.arbalet.height
 
@@ -84,6 +84,11 @@ class Arbapp(object):
                             type=int,
                             default=40,
                             help='Size of the simulated pixels')
+        parser.add_argument('-nt', '--no-touch',
+                            action='store_const',
+                            const=True,
+                            default=False,
+                            help='Disable the touch feature. This option has no influence on apps that are not touch-compatible')
 
         # We parse args normally if running in non-interactive mode, otherwise we ignore args to avoid conflicts with ipython
         self.args = parser.parse_args([] if self.is_interactive() else None)
