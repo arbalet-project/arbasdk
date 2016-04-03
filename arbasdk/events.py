@@ -1,11 +1,11 @@
-from pygame import event, joystick, JOYBUTTONDOWN
+from pygame import init, quit, event, joystick, JOYBUTTONDOWN
 from threading import RLock, Thread
 from copy import copy
 from . rate import Rate
 
 class Events(Thread):
     """
-    Arbalet Events manager
+    Arbalet Events manager, also in charge of pygame init and quit
     """
 
     EVENT_NUM_LIMIT = 1000
@@ -18,6 +18,7 @@ class Events(Thread):
         :return:
         """
         Thread.__init__(self)
+        init()
         self.setDaemon(True)
         self._system_events = []
         self._user_events = []
@@ -25,6 +26,7 @@ class Events(Thread):
         self._rate = Rate(arbalet.config['refresh_rate'])
         self._arbalet = arbalet
         self._runtime_control = runtime_control
+        self.running = False
 
         # All joysticks are enabled by default
         joystick.init()
@@ -66,11 +68,15 @@ class Events(Thread):
         self._system_events = []
         return returned_copy
 
+    def close(self):
+        self.running = False
+
     def run(self):
         """
         Run the event manager that redistributes duplicated events to user and SDK, and TODO gathers all events
         """
-        while True:
+        self.running = True
+        while self.running:
             system_events = self._get()  # Get the system event list
             if self._runtime_control:
                 # Check for the touch toggling signal
@@ -79,3 +85,4 @@ class Events(Thread):
                         self._arbalet.touch.toggle_touch()
                         break
             self._rate.sleep()
+        quit()
