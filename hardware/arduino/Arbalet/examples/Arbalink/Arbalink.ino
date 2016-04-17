@@ -38,7 +38,7 @@ void show_all(byte r=0, byte g=0, byte b=0) {
 void setup() {
   while(!Serial);
   Serial.begin(115200);
-  Serial.setTimeout(3000);
+  Serial.setTimeout(5000);
   wait_for_connection();
 }
 
@@ -95,10 +95,22 @@ boolean handshake() {
   /* Memory allocation */
   free_allocated_memory();  // TODO, do not free, updating existing objects would be faster
   pixels = new Adafruit_NeoPixel(leds_num, pin_num, NEO_GRB + NEO_KHZ800);
-  touch = new Adafruit_MPR121();
+  
+  /* Init the touch sensor if enabled */
+  boolean touch_init = false;
+  if(touch_type>0) {
+      touch = new Adafruit_MPR121();
+      touch_init = touch? touch->begin() : false;
+  }
+  else {
+      touch_init = true;
+  }
+  
+  /* Init the LED strip */
   buffer = (char*) malloc(3*leds_num);
   pixels->begin();
-  boolean touch_init = touch? touch->begin() : false;
+  
+  /* Check that init is fully successful */
   write_char((buffer==NULL || pixels==NULL || touch_init==false)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
   return true;
 }
@@ -132,8 +144,11 @@ void update_leds_from_buffer() {
 }
 
 void loop() {
-    if(read_buffer(CMD_BUFFER_READY_DATA_FOLLOWS)) {
-      send_touch_frame();
+    char readiness = touch_type>0? CMD_BUFFER_READY_DATA_FOLLOWS : CMD_BUFFER_READY;
+    if(read_buffer(readiness)) {
+      if(touch_type>0) {
+          send_touch_frame();
+      }
       update_leds_from_buffer();
     }
     else {
