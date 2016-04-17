@@ -21,7 +21,7 @@ class CapacitiveTouch(object):
         with open(config) as f:
             self._config = load(f)
 
-        self._num_buttons = len(self._config['touch']['keys']) if self._config['touch']['enabled'] else 0  # 0 button means touch-disabled hardware
+        self._num_buttons = len(self._config['touch']['keys']) if self._config['touch']['num_keys'] > 0 else 0  # 0 button means touch-disabled hardware
         self._touch_events = []
         self._touch_int = 0  # Last touch state (combination of booleans)
         self._touch_keys_values = []  # Filtered data of last touched keys

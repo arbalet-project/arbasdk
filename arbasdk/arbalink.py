@@ -109,7 +109,7 @@ class Arbalink(Thread):
             assert version == self.PROTOCOL_VERSION, "Hardware uses protocol v{}, SDK uses protocol v{}".format(version, self.PROTOCOL_VERSION)
             self.write_short(self._arbalet.end_model.get_height()*self._arbalet.end_model.get_width())
             self.write_uint8(self._arbalet.config['leds_pin_number'])
-            self.write_uint8(self._arbalet.config['touch']['type'])
+            self.write_uint8(self._arbalet.config['touch']['num_keys'])
             init_result = self.read_char()
             if init_result == self.CMD_CLIENT_INIT_SUCCESS:
                 print "Arbalet hardware initialization successful"
@@ -150,12 +150,12 @@ class Arbalink(Thread):
 
     def read_touch_frame(self):
         touch_int = self.read_short()
-        num_keys = self._arbalet.config['touch']['type']
+        num_keys = self._arbalet.config['touch']['num_keys']
         keys = []
         for key in range(num_keys):
             key_state = self.read_short()
             keys.append(key_state)
-        if self._arbalet.touch is not None:
+        if self._arbalet.touch is not None and self._arbalet.config['touch']['num_keys'] > 0:
             self._arbalet.touch.create_event(touch_int, keys)
 
     def write_serial_frame(self, frame):

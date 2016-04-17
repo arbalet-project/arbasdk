@@ -25,8 +25,7 @@
    "font": "freesans",
    "vertical": true,
    "touch": {
-     "enabled": true,
-     "type": 12,
+     "num_keys": 12,
      "threshold": 30,
      "calibrated": true,
      "window_size": 8,
