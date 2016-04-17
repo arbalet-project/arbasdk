@@ -151,11 +151,12 @@ class Arbalink(Thread):
     def read_touch_frame(self):
         touch_int = self.read_short()
         num_keys = self._arbalet.config['touch']['type']
+        keys = []
         for key in range(num_keys):
             key_state = self.read_short()
-            # TODO: Filtered data can be used here instead of touch_int for calibration purposes
+            keys.append(key_state)
         if self._arbalet.touch is not None:
-            self._arbalet.touch.create_event(touch_int)
+            self._arbalet.touch.create_event(touch_int, keys)
 
     def write_serial_frame(self, frame):
         ready = self.read_char()
