@@ -10,7 +10,7 @@
 
 from threading import Thread
 from serial import Serial, SerialException
-from struct import pack, unpack
+from struct import pack, unpack, error
 from sys import stderr
 from time import sleep
 from . rate import Rate
@@ -89,13 +89,21 @@ class Arbalink(Thread):
         self.write_char(chr(i))
 
     def read_char(self):
-        return unpack('<c', self._serial.read())[0]
+        try:
+            return unpack('<c', self._serial.read())[0]
+        except error:
+            self._connected = False
+            return '\0'
 
     def write_char(self, c):
         self._serial.write(pack('<c', c))
 
     def read_short(self):
-        return unpack('<H', self._serial.read(2))[0]
+        try:
+            return unpack('<H', self._serial.read(2))[0]
+        except error:
+            self._connected = False
+            return 0
 
     def write_short(self, s):
         self._serial.write(pack('<H', s))
@@ -176,7 +184,7 @@ class Arbalink(Thread):
                     data_follows = self.write_serial_frame(array)
                     if data_follows:
                         self.read_touch_frame()
-                except (SerialException, OSError) as e:
+                except (SerialException, OSError, error) as e:
                     self._connected = False
                 self._rate.sleep()
             else:
