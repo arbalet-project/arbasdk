@@ -27,6 +27,7 @@ setup(
     ],
 
     data_files=[('config', ['config/config150.json']),
+                ('config', ['config/config150touch.json']),
                 ('config', ['config/default.cfg']),
                 ('arbasdk', ['arbasdk/icon.png'])
     ],

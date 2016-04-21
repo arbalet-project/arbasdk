@@ -25,6 +25,24 @@
    "font": "freesans",
    "vertical": true,
    "touch": {
-     "num_keys": 0
+     "num_keys": 12,
+     "threshold": 30,
+     "calibrated": true,
+     "window_size": 8,
+     "keys": [[[14, 8], [14, 9]],
+              [[14, 6], [14, 7]],
+              [[14, 5], [14, 4]],
+              [[14, 3], [14, 2]],
+              [[14, 1], [14, 0]],
+              [[11, 4], [11, 5]]],
+      "mapping": {
+        "bidirectional": ["right", "right", "none", "left", "left", "none"],
+        "tridirectional": ["right", "right", "none", "left", "left", "up"],
+        "quadridirectional": ["right", "none", "down", "none", "left", "up"],
+        "columns": [5, 4, 3, 2, 1, "none"],
+        "individual": [1, 2, 3, 4, 5, 6]},
+     "colors": {
+       "active":   [150, 150, 150],
+       "inactive": [10, 10, 10]}
    }
  }
