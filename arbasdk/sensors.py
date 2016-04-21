@@ -32,7 +32,7 @@ class CapacitiveTouch(object):
         self._height = height
         self._width = width
         self._model = Arbamodel(self._height, self._width, 'black')
-        self._mode = None
+        self._mode = 'off'
         self._old_touch_mode = 'off'  # Store the former touch mode to be able to pause or resume the touch capability
         self._windowed_touch_values = deque([])  # Store the former touch keys values
         self._calibrated_low_levels = []  # Stores the "low level" = untouched
@@ -44,8 +44,9 @@ class CapacitiveTouch(object):
         Activate a helper mode by choosing a set of keys to detect
         """
         if new_mode in self.modes:
-            with self._mode_lock:
-                self._mode = new_mode
+            if self._num_buttons > 0:
+                with self._mode_lock:
+                    self._mode = new_mode
         else:
             raise ValueError("Mode {} is unknown, should be one of {}".format(new_mode, str(self.modes)))
         self.update_model()
@@ -60,6 +61,9 @@ class CapacitiveTouch(object):
         """
         def touch_to_buttons(touch):
             return [(touch & (1 << bit)) > 0 for bit in range(self._num_buttons)]
+
+        if self._config['touch']['num_keys'] < 1 or self.mode == 'off':
+            return
 
         if self._config['touch']['calibrated']:
             # Strategy: compare the mean of the last 10 samples
