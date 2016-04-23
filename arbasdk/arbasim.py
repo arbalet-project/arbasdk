@@ -11,8 +11,9 @@ from os.path import dirname, join
 from . rate import Rate
 from threading import Thread
 from os import environ
-from pygame import color, display, draw, Rect, error
+from pygame import color, display, draw, Rect, error, QUIT, init
 from pygame.image import load_extended, get_extended
+from pygame.event import peek
 
 __all__ = ['Arbasim']
 
@@ -70,3 +71,7 @@ class Arbasim(Thread):
                 display.update()
                 self.display.unlock()
             self.rate.sleep()
+
+        with self.arbalet.sdl_lock:
+            display.quit()
+            init()  # Hack to relaunch pygame after closing the window to keep the rest of the system working

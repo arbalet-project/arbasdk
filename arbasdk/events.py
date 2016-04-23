@@ -1,4 +1,4 @@
-from pygame import init, quit, event, joystick, JOYBUTTONDOWN
+from pygame import init, event, joystick, JOYBUTTONDOWN, QUIT
 from threading import RLock, Thread
 from copy import copy
 from . rate import Rate
@@ -85,5 +85,9 @@ class Events(Thread):
                 for ev in system_events:
                     if ev.type == JOYBUTTONDOWN and ev.button in [4, 6]:
                         self._arbalet.touch.toggle_touch()
+                        break
+                    if ev.type == QUIT:
+                        self._arbalet.arbasim.close()
+                        self.running = False
                         break
             self._rate.sleep()
