@@ -132,9 +132,6 @@ class Arbalink(Thread):
 
     def close(self, reason='unknown'):
         self._running = False
-        if self._serial:
-            self._serial.close()
-            self._serial = None
 
     def get_serial_frame(self):
         def __limit(v):
@@ -189,4 +186,6 @@ class Arbalink(Thread):
                 self._rate.sleep()
             else:
                 self.connect_forever()
-    
+        if self._serial:
+            self._serial.close()
+            self._serial = None
