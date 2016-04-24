@@ -42,8 +42,8 @@ class Arbaclient(Thread):
     def receive_touch(self):
         touch_frame = self.sender.recv_json()
         touch_int = touch_frame[0]
-        touch_values = touch_frame[1]
-        self.arbalet.touch.create_event(touch_int, touch_values)
+        touch_booleans = touch_frame[1]
+        self.arbalet.touch.create_event(touch_int, touch_booleans)
 
     def close(self, reason='unknown'):
         self.running = False
