@@ -87,7 +87,8 @@ class Events(Thread):
                         self._arbalet.touch.toggle_touch()
                         break
                     if ev.type == QUIT:
-                        self._arbalet.arbasim.close()
+                        if self._arbalet.arbasim is not None:
+                            self._arbalet.arbasim.close()
                         self.running = False
                         break
             self._rate.sleep()
