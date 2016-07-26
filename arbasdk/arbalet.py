@@ -23,17 +23,23 @@ from threading import RLock
 __all__ = ['Arbalet']
 
 class Arbalet(object):
-    def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=30, config='', interactive=True):
+    def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=30, config='', interactive=True, joystick=''):
         if config=='':
             cfg_path = path.join(path.dirname(sdk_file), '..', 'config', 'default.cfg')
             cfg_parser = RawConfigParser()
             cfg_parser.read(cfg_path)
             config = cfg_parser.get('DEFAULT', 'config')
+            joystick = cfg_parser.get('DEFAULT', 'joystick')
 
         if not path.isfile(config):
             config = path.join(path.dirname(sdk_file), '..', 'config', config)
         if not path.isfile(config):
             raise Exception("Config file '{}' not found".format(config))
+
+        if not path.isfile(joystick):
+            joystick = path.join(path.dirname(sdk_file), '..', 'config', joystick)
+        if not path.isfile(joystick):
+            raise Exception("Joystick mapping file '{}' not found".format(joystick))
 
         try:
             with open(config, 'r') as f:
@@ -42,6 +48,14 @@ class Arbalet(object):
             raise ValueError("Your configuration file {} has an incorrect format, make sure it is a valid JSON. {}".format(config, e.message))
         except IOError, e:
             raise IOError("Configuration file {} can't be read. {}".format(config, e.message))
+
+        try:
+            with open(joystick, 'r') as f:
+                self.joystick = load(f)
+        except ValueError, e:
+            raise ValueError("Your joystick mapping file {} has an incorrect format, make sure it is a valid JSON. {}".format(joystick, e.message))
+        except IOError, e:
+            raise IOError("Joystick mapping file {} can't be read. {}".format(joystick, e.message))
 
         self._simulation = simulation
         self._hardware = hardware

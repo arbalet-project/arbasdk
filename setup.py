@@ -29,6 +29,8 @@ setup(
     data_files=[('config', ['config/config150.json']),
                 ('config', ['config/config150touch.json']),
                 ('config', ['config/default.cfg']),
+                ('config', ['config/joyF710.json']),
+                ('config', ['config/joyRumblepad.json']),
                 ('arbasdk', ['arbasdk/icon.png'])
     ],
 

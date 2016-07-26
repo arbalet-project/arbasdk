@@ -44,7 +44,7 @@ class Events(Thread):
 
         with self._user_events_lock:
             if len(self._user_events) < self.EVENT_NUM_LIMIT:
-                # TODO drop the oldest events instead of droping the last ones?
+                # TODO drop the oldest events instead of dropping the last ones?
                 self._user_events = self._user_events + events
 
     def get(self):
@@ -83,7 +83,7 @@ class Events(Thread):
             if self._runtime_control:
                 # Check for the touch toggling signal
                 for ev in system_events:
-                    if ev.type == JOYBUTTONDOWN and ev.button in [4, 6]:
+                    if ev.type == JOYBUTTONDOWN and ev.button in self._arbalet.joystick['touch']:
                         self._arbalet.touch.toggle_touch()
                         break
                     if ev.type == QUIT:
