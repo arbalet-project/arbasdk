@@ -46,7 +46,7 @@ class Arbafont(object):
         if self._size==0:
             raise ValueError("The selected font {} cannot be rendered in any size".format(font))
         self._font = Font(font, self._size)
-        print "Font {} of size {}".format(font, self._size)
+        #print("Font {} of size {}".format(font, self._size))
 
     def _get_ideal_font_size(self, height, width, font):
         """
@@ -65,34 +65,18 @@ class Arbafont(object):
         return ideal_size
 
     def _render_flat(self, text):
-        text = text.decode('utf-8')
-
-        def to_bool(character):
-            return unpack('@?', character)[0]
-
-        return map(to_bool, self._font.render(text, False, Color('black')).get_buffer().raw)
+        #  # TODO non-py2
+        raw_text = self._font.render(text, False, Color('black')).get_buffer().raw
+        return unpack('@{}?'.format(len(raw_text)), raw_text)
 
     def render(self, text):
         flat_mat = self._render_flat(text)
 
         matrix = []
-        for h in range(0, len(flat_mat), len(flat_mat)/(self.height if self.vertical else self.width)):
-            matrix.append(flat_mat[h:h+len(flat_mat)/(self.height if self.vertical else self.width)])
+        for h in range(0, len(flat_mat), len(flat_mat)//(self.height if self.vertical else self.width)):
+            matrix.append(flat_mat[h:h+len(flat_mat)//(self.height if self.vertical else self.width)])
 
         matrix = array(matrix)
         return RenderedText(matrix if self.vertical else rot90(matrix))
 
-    def print_mat(self, text):
-        flat_mat = self._render_flat(text.decode('utf-8'))
-        index = 0
-        for h in range(0, len(flat_mat), len(flat_mat)/(self.height if self.vertical else self.width)):
-            for w in range(len(flat_mat)/(self.height if self.vertical else self.width)):
-                if flat_mat[index]:
-                    print '■',
-                else:
-                    print ' ',
-                index += 1
-            print '|'
 
-if __name__=='__main__':
-    Arbafont(15, 10, True).print_mat('#8€')

@@ -9,7 +9,7 @@
 """
 
 from threading import RLock
-from arbasdk import Arbamodel
+from arbalet.core import Arbamodel
 from json import load
 from numpy import array, mean
 from collections import deque
@@ -91,7 +91,7 @@ class CapacitiveTouch(object):
                     if len(self._calibrated_low_levels) == 0:
                         # If uncalibrated
                         self._calibrated_low_levels = windowed_mean
-                        print "Touch calibrated!"
+                        print("Touch calibrated")
                     else:
                         # If calibration done
                         for button in range(self._num_buttons):

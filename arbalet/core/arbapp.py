@@ -9,9 +9,9 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from arbalet import Arbalet
+from .arbalet import Arbalet
 from pygame import init as pygame_init
-import argparse, __builtin__
+import argparse
 
 __all__ = ['Arbapp']
 
@@ -47,7 +47,12 @@ class Arbapp(object):
         """
         :return: True if the code is running interactively with IPYTHON, False otherwise
         """
-        return '__IPYTHON__' in vars(__builtin__)
+        try:
+            __IPYTHON__
+        except NameError:
+            return False
+        else:
+            return True
 
     def read_args(self, argparser):
 

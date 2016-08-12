@@ -8,7 +8,7 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from os.path import dirname, join
-from . rate import Rate
+from .rate import Rate
 from threading import Thread
 from os import environ
 from pygame import color, display, draw, Rect, error, QUIT, init

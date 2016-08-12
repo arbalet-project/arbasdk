@@ -1,7 +1,7 @@
 from pygame import init, event, joystick, JOYBUTTONDOWN, QUIT
 from threading import RLock, Thread
 from copy import copy
-from . rate import Rate
+from .rate import Rate
 
 class Events(Thread):
     """

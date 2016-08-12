@@ -8,16 +8,17 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from . arbasim import Arbasim
-from . arbalink import Arbalink
-from . arbaclient import Arbaclient
-from . events import Events
+from .arbasim import Arbasim
+from .arbalink import Arbalink
+from .arbaclient import Arbaclient
+from .arbamodel import Arbamodel
+from .events import Events
+from .sensors import CapacitiveTouch
+from functools import reduce
 from os import path
 from json import load
-from ConfigParser import RawConfigParser
-from arbasdk import __file__ as sdk_file
-from arbasdk import Arbamodel
-from arbasdk.sensors import CapacitiveTouch
+from configparser import RawConfigParser
+from arbalet.core import __file__ as sdk_file
 from threading import RLock
 
 __all__ = ['Arbalet']
@@ -34,28 +35,28 @@ class Arbalet(object):
         if not path.isfile(config):
             config = path.join(path.dirname(sdk_file), '..', 'config', config)
         if not path.isfile(config):
-            raise Exception("Config file '{}' not found".format(config))
+            raise IOError("Config file '{}' not found".format(config))
 
         if not path.isfile(joystick):
             joystick = path.join(path.dirname(sdk_file), '..', 'config', joystick)
         if not path.isfile(joystick):
-            raise Exception("Joystick mapping file '{}' not found".format(joystick))
+            raise IOError("Joystick mapping file '{}' not found".format(joystick))
 
         try:
             with open(config, 'r') as f:
                 self.config = load(f)
-        except ValueError, e:
-            raise ValueError("Your configuration file {} has an incorrect format, make sure it is a valid JSON. {}".format(config, e.message))
-        except IOError, e:
-            raise IOError("Configuration file {} can't be read. {}".format(config, e.message))
+        except ValueError as e:
+            raise ValueError("Your configuration file {} has an incorrect format, make sure it is a valid JSON. {}".format(config, str(e)))
+        except IOError as e:
+            raise IOError("Configuration file {} can't be read. {}".format(config, str(e)))
 
         try:
             with open(joystick, 'r') as f:
                 self.joystick = load(f)
-        except ValueError, e:
-            raise ValueError("Your joystick mapping file {} has an incorrect format, make sure it is a valid JSON. {}".format(joystick, e.message))
-        except IOError, e:
-            raise IOError("Joystick mapping file {} can't be read. {}".format(joystick, e.message))
+        except ValueError as e:
+            raise ValueError("Your joystick mapping file {} has an incorrect format, make sure it is a valid JSON. {}".format(joystick, str(e)))
+        except IOError as e:
+            raise IOError("Joystick mapping file {} can't be read. {}".format(joystick, str(e)))
 
         self._simulation = simulation
         self._hardware = hardware
@@ -91,7 +92,7 @@ class Arbalet(object):
             elif len(server)==1:
                 self.arbaclient = Arbaclient(self, server[0])
             else:
-                raise Exception('Incorrect server address, use ip:port or ip')
+                raise ValueError('Incorrect server address, use ip:port or ip')
 
     @property
     def end_model(self):

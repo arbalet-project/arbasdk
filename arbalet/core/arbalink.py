@@ -13,17 +13,17 @@ from serial import Serial, SerialException
 from struct import pack, unpack, error
 from sys import stderr
 from time import sleep
-from . rate import Rate
+from .rate import Rate
 from os import name
 
 __all__ = ['Arbalink']
 
 class Arbalink(Thread):
-    CMD_HELLO = 'H'
-    CMD_BUFFER_READY = 'B'
-    CMD_BUFFER_READY_DATA_FOLLOWS = 'D'
-    CMD_CLIENT_INIT_SUCCESS = 'S'
-    CMD_CLIENT_INIT_FAILURE = 'F'
+    CMD_HELLO = b'H'
+    CMD_BUFFER_READY = b'B'
+    CMD_BUFFER_READY_DATA_FOLLOWS = b'D'
+    CMD_CLIENT_INIT_SUCCESS = b'S'
+    CMD_CLIENT_INIT_FAILURE = b'F'
     PROTOCOL_VERSION = 2
     
     def __init__(self, arbalet, diminution=1, autorun=True):
@@ -57,8 +57,8 @@ class Arbalink(Thread):
         device = self._arbalet.config['devices'][self._platform][self._current_device]
         try:
             self._serial = Serial(device, self._arbalet.config['speed'], timeout=3)
-        except SerialException, e:
-            print >> stderr, "[Arbalink] Connection to {} at speed {} failed: {}".format(device, self._arbalet.config['speed'], e.message)
+        except SerialException as e:
+            print("[Arbalink] Connection to {} at speed {} failed: {}".format(device, self._arbalet.config['speed'], str(e)), file=stderr)
             self._serial = None
             self._current_device = (self._current_device+1) % len(self._arbalet.config['devices'])
             return False
@@ -66,7 +66,7 @@ class Arbalink(Thread):
             try:
                 self.handshake()
             except (IOError, SerialException, OSError) as e:
-                print >> stderr, "[Arbalink] Handshake failure: {}".format(e.message)
+                print("[Arbalink] Handshake failure: {}".format(str(e)), file=stderr)
                 return False
             return True
 
@@ -86,7 +86,7 @@ class Arbalink(Thread):
         return ord(self.read_char())
 
     def write_uint8(self, i):
-        self.write_char(chr(i))
+        self._serial.write(pack('<B', i))
 
     def read_char(self):
         try:
@@ -96,7 +96,7 @@ class Arbalink(Thread):
             return '\0'
 
     def write_char(self, c):
-        self._serial.write(pack('<c', c))
+        self._serial.write(pack('<c', bytes(c)))
 
     def read_short(self):
         try:
@@ -120,7 +120,7 @@ class Arbalink(Thread):
             self.write_uint8(self._arbalet.config['touch']['num_keys'])
             init_result = self.read_char()
             if init_result == self.CMD_CLIENT_INIT_SUCCESS:
-                print "Arbalet hardware initialization successful"
+                print("Arbalet hardware initialization successful")
                 self._connected = True
                 return True
             elif init_result == self.CMD_CLIENT_INIT_FAILURE:
@@ -138,12 +138,12 @@ class Arbalink(Thread):
             return int(max(0, min(255, v)))
         
         end_model = self._arbalet.end_model
-        array = bytearray(' '*(end_model.get_height()*end_model.get_width()*3))
+        array = bytearray(' '*(end_model.get_height()*end_model.get_width()*3), 'ascii')
         for h in range(end_model.get_height()):
             for w in range(end_model.get_width()):
                 try:
                     idx = self._arbalet.config['mapping'][h][w]*3 # = mapping shift by 3 colors
-                except IndexError, e:
+                except IndexError as e:
                     self.close('config error')
                     raise Exception('Incorrect mapping, please check your configuration file, arbalink exiting...')
                 else:

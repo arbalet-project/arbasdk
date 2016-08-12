@@ -8,12 +8,12 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from arbapixel import Arbapixel
+from .arbapixel import Arbapixel
 from copy import deepcopy
 from itertools import product
 from threading import RLock
-from arbafont import Arbafont
-from rate import Rate
+from .arbafont import Arbafont
+from .rate import Rate
 
 __all__ = ['Arbamodel']
 
