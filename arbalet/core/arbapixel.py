@@ -14,7 +14,7 @@ __all__ = ['Arbapixel', 'hsv']
 def hsv(h, s, v, a=100):
     # ranges H = [0, 360], S = [0, 100], V = [0, 100], A = [0, 100]
     c = Color(0, 0, 0)
-    c.hsva = map(int, (h, s, v, a))
+    c.hsva = list(map(int, (h, s, v, a)))
     return (c.r, c.g, c.b, c.a)
 
 class Arbapixel(object):
