@@ -9,7 +9,7 @@
 """
 
 from threading import RLock
-from arbalet.core import Arbamodel
+from ..core import Arbamodel
 from json import load
 from numpy import array, mean
 from collections import deque

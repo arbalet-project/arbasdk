@@ -7,7 +7,7 @@
     Copyright 2015 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
-
+from __future__ import print_function  # py2 stderr
 from threading import Thread
 from serial import Serial, SerialException
 from struct import pack, unpack, error

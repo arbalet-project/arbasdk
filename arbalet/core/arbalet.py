@@ -18,7 +18,6 @@ from functools import reduce
 from os import path
 from json import load
 from configparser import RawConfigParser
-from arbalet.core import __file__ as sdk_file
 from threading import RLock
 
 __all__ = ['Arbalet']
@@ -26,19 +25,19 @@ __all__ = ['Arbalet']
 class Arbalet(object):
     def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=30, config='', interactive=True, joystick=''):
         if config=='':
-            cfg_path = path.join(path.dirname(sdk_file), '..', 'config', 'default.cfg')
+            cfg_path = path.join(path.dirname(__file__), '..', 'config', 'default.cfg')
             cfg_parser = RawConfigParser()
             cfg_parser.read(cfg_path)
             config = cfg_parser.get('DEFAULT', 'config')
             joystick = cfg_parser.get('DEFAULT', 'joystick')
 
         if not path.isfile(config):
-            config = path.join(path.dirname(sdk_file), '..', 'config', config)
+            config = path.join(path.dirname(__file__), '..', 'config', config)
         if not path.isfile(config):
             raise IOError("Config file '{}' not found".format(config))
 
         if not path.isfile(joystick):
-            joystick = path.join(path.dirname(sdk_file), '..', 'config', joystick)
+            joystick = path.join(path.dirname(__file__), '..', 'config', joystick)
         if not path.isfile(joystick):
             raise IOError("Joystick mapping file '{}' not found".format(joystick))
 
