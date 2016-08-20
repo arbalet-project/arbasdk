@@ -96,7 +96,9 @@ class Arbalet(object):
     @property
     def end_model(self):
         # The final model is the addition of all models of each layer
-        return reduce(Arbamodel.__add__, self._models.values())
+        with self._models['user']:
+            with self._models['touch']:
+                return self._models['user'] + self._models['touch']
 
     def close(self, reason='unknown'):
         if self._simulation:
