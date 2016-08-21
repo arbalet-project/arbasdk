@@ -1,6 +1,6 @@
 """
     Arbalet - ARduino-BAsed LEd Table
-    Arbamodel - Arbalet State
+    Model - Arbalet State
 
     Store a snapshot of the table state
 
@@ -8,16 +8,16 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from .arbapixel import Arbapixel
+from .arbapixel import Pixel
 from copy import deepcopy
 from itertools import product
 from threading import RLock
-from .arbafont import Arbafont
+from .arbafont import Font
 from .rate import Rate
 
-__all__ = ['Arbamodel']
+__all__ = ['Model']
 
-class Arbamodel(object):
+class Model(object):
     # line, column
     def __init__(self, height, width, color):
         self.height = height
@@ -25,7 +25,7 @@ class Arbamodel(object):
         self.font = None
 
         self._model_lock = RLock()
-        self._model = [[Arbapixel(color) if len(color)>0 else Arbapixel('black') for j in range(width)] for i in range(height)]
+        self._model = [[Pixel(color) if len(color)>0 else Pixel('black') for j in range(width)] for i in range(height)]
 
     def copy(self):
         return deepcopy(self)
@@ -46,7 +46,7 @@ class Arbamodel(object):
         return self._model[h][w]
 
     def set_pixel(self, h, w, color):
-        self._model[h][w] = Arbapixel(color)
+        self._model[h][w] = Pixel(color)
 
     def get_all_combinations(self):
         return map(tuple, product(range(self.height), range(self.width)))
@@ -63,7 +63,7 @@ class Arbamodel(object):
         self.unlock()
 
     def __add__(self, other):
-        model = Arbamodel(self.height, self.width, 'black')
+        model = Model(self.height, self.width, 'black')
         for w in range(self.width):
             for h in range(self.height):
                 model._model[h][w] = self._model[h][w] + other._model[h][w]
@@ -77,7 +77,7 @@ class Arbamodel(object):
         return True
 
     def __sub__(self, other):
-        model = Arbamodel(self.height, self.width, 'black')
+        model = Model(self.height, self.width, 'black')
         for w in range(self.width):
             for h in range(self.height):
                 model._model[h][w] = self._model[h][w] - other._model[h][w]
@@ -90,7 +90,7 @@ class Arbamodel(object):
         return str(self._model)
 
     def __mul__(self, m):
-        model = Arbamodel(self.height, self.width)
+        model = Model(self.height, self.width)
         for w in range(self.width):
             for h in range(self.height):
                 model._model[h][w] = self._model[h][w]*m
@@ -114,7 +114,7 @@ class Arbamodel(object):
         :param font: Font name (list: pygame.font.get_fonts()
         :param vertical: True if the text must be displayed in portrait mode, false for landscape mode
         """
-        self.font = Arbafont(self.height, self.width, vertical, font)
+        self.font = Font(self.height, self.width, vertical, font)
 
     def write(self, text, foreground, background='black', speed=10):
         """

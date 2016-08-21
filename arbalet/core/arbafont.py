@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
     Arbalet - ARduino-BAsed LEd Table
-    Arbafont - Arbalet font for text rendering
+    Font - Arbalet font for text rendering
 
     Copyright 2015 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
-from pygame.font import Font, get_default_font, match_font, init as pygame_init
+from pygame.font import get_default_font, match_font, init as pygame_init, Font as pygame_Font
 from pygame import Color
 from struct import unpack
 from numpy import array, rot90
@@ -20,7 +20,7 @@ class RenderedText(object):
     def __init__(self, text):
         self.rendered = text
 
-class Arbafont(object):
+class Font(object):
     MAX_SIZE = 100
 
     def __init__(self, height, width, vertical=False, font=None):
@@ -45,7 +45,7 @@ class Arbafont(object):
 
         if self._size==0:
             raise ValueError("The selected font {} cannot be rendered in any size".format(font))
-        self._font = Font(font, self._size)
+        self._font = pygame_Font(font, self._size)
         #print("Font {} of size {}".format(font, self._size))
 
     def _get_ideal_font_size(self, height, width, font):
@@ -58,7 +58,7 @@ class Arbafont(object):
         """
         ideal_size = 0
         for i in range(1, self.MAX_SIZE):
-            if Font(font, i).get_height()<=height:
+            if pygame_Font(font, i).get_height()<=height:
                 ideal_size = i
             else:
                 break

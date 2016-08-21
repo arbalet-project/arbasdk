@@ -9,7 +9,7 @@
 """
 
 from threading import RLock
-from ..core import Arbamodel
+from ..core import Model
 from json import load
 from numpy import array, mean
 from collections import deque
@@ -31,7 +31,7 @@ class CapacitiveTouch(object):
         self._keypad = True
         self._height = height
         self._width = width
-        self._model = Arbamodel(self._height, self._width, 'black')
+        self._model = Model(self._height, self._width, 'black')
         self._mode = 'off'
         self._old_touch_mode = 'off'  # Store the former touch mode to be able to pause or resume the touch capability
         self._windowed_touch_values = deque([])  # Store the former touch keys values

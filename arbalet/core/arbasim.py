@@ -1,6 +1,6 @@
 """
     Arbalet - ARduino-BAsed LEd Table
-    Arbasim - Arbalet Simulator
+    Simulator - Arbalet Simulator
 
     Simulate an Arbalet table
 
@@ -15,10 +15,10 @@ from pygame import color, display, draw, Rect, error, QUIT, init
 from pygame.image import load_extended, get_extended
 from pygame.event import peek
 
-__all__ = ['Arbasim']
+__all__ = ['Simulator']
 
 
-class Arbasim(Thread):
+class Simulator(Thread):
     def __init__(self, arbalet, sim_height, sim_width):
         Thread.__init__(self)
         self.arbalet = arbalet

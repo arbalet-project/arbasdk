@@ -8,10 +8,10 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from .arbasim import Arbasim
+from .arbasim import Simulator
 from .arbalink import Arbalink
 from .arbaclient import Arbaclient
-from .arbamodel import Arbamodel
+from .arbamodel import Model
 from .events import Events
 from .sensors import CapacitiveTouch
 from functools import reduce
@@ -64,7 +64,7 @@ class Arbalet(object):
         self.diminution = diminution
         self.height = len(self.config['mapping'])
         self.width = len(self.config['mapping'][0]) if self.height>0 else 0
-        self.user_model = Arbamodel(self.height, self.width, 'black')
+        self.user_model = Model(self.height, self.width, 'black')
         self.touch = CapacitiveTouch(config, self.height, self.width)
         self.sdl_lock = RLock()  # Temporary hack to lock pygame calls using SDL before we create a centralized event manager for joystick and so on
 
@@ -79,7 +79,7 @@ class Arbalet(object):
         self.arbaclient = None
 
         if self._simulation:
-            self.arbasim = Arbasim(self, self.height*factor_sim, self.width*factor_sim)
+            self.arbasim = Simulator(self, self.height*factor_sim, self.width*factor_sim)
 
         if self._hardware:
             self.arbalink = Arbalink(self, self.diminution)

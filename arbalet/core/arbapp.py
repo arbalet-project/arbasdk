@@ -1,6 +1,6 @@
 """
     Arbalet - ARduino-BAsed LEd Table
-    Arbapp - Arbalet Application
+    Application - Arbalet Application
 
     All Application for Arbalet should inherit from this class.
     Wanna create an awesome Arbalet application? Start here.
@@ -13,16 +13,16 @@ from .arbalet import Arbalet
 from pygame import init as pygame_init
 import argparse
 
-__all__ = ['Arbapp']
+__all__ = ['Application']
 
-class Arbapp(object):
-    app_declared = False  # True when an Arbapp has been instanciated
+class Application(object):
+    app_declared = False  # True when an Application has been instanciated
 
     def __init__(self, argparser=None, moke_execution=False, touch_mode='off'):
-        if Arbapp.app_declared:
-            raise RuntimeError('Arbapp can be instanciated only once')
+        if Application.app_declared:
+            raise RuntimeError('Application can be instanciated only once')
 
-        Arbapp.app_declared = True
+        Application.app_declared = True
         pygame_init()
         self.read_args(argparser)
         self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
@@ -100,7 +100,7 @@ class Arbapp(object):
 
 
     def run(self):
-        raise NotImplementedError("Arbapp.run() must be overidden")
+        raise NotImplementedError("Application.run() must be overidden")
 
     def start(self):
         try:
