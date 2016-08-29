@@ -24,12 +24,14 @@ __all__ = ['Arbalet']
 
 class Arbalet(object):
     def __init__(self, simulation=True, hardware=False, server='', diminution=1, factor_sim=30, config='', interactive=True, joystick=''):
-        if config=='':
+        if config=='' or joystick=='':
             cfg_path = path.join(path.dirname(__file__), '..', 'config', 'default.cfg')
             cfg_parser = RawConfigParser()
             cfg_parser.read(cfg_path)
-            config = cfg_parser.get('DEFAULT', 'config')
-            joystick = cfg_parser.get('DEFAULT', 'joystick')
+            if config=='':
+                config = cfg_parser.get('DEFAULT', 'config')
+            if joystick=='':
+                joystick = cfg_parser.get('DEFAULT', 'joystick')
 
         if not path.isfile(config):
             config = path.join(path.dirname(__file__), '..', 'config', config)
