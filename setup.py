@@ -28,6 +28,7 @@ setup(
 
     data_files=[('arbalet/config', ['arbalet/config/config150.json']),
                 ('arbalet/config', ['arbalet/config/config150touch.json']),
+                ('arbalet/config', ['arbalet/config/config300.json']),
                 ('arbalet/config', ['arbalet/config/default.cfg']),
                 ('arbalet/config', ['arbalet/config/joyF710.json']),
                 ('arbalet/config', ['arbalet/config/joyRumblepad.json']),
