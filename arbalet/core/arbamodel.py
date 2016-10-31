@@ -12,6 +12,7 @@ from .arbapixel import Pixel
 from copy import deepcopy
 from itertools import product
 from threading import RLock
+from time import time
 from .arbafont import Font
 from .rate import Rate
 
@@ -143,4 +144,24 @@ class Model(object):
                         except IndexError:
                             illuminated = False
                         self.set_pixel(h, w, foreground if illuminated else background)
+            rate.sleep()
+
+    def flash(self, duration=4., speed=1.5):
+        """
+        Blocking and self-locking call flashing the current model on and off (mainly for game over)
+        :param duration: Approximate duration of flashing in seconds
+        :param rate: Rate of flashing in Hz
+        """
+        rate = Rate(speed)
+        t0 = time()
+        model_id = 0
+        with self._model_lock:
+            models = [[[Pixel('black') for j in range(self.width)] for i in range(self.height)], self._model]
+
+        model_off = False
+        while time()-t0 < duration or model_off:
+            with self._model_lock:
+                self._model = models[model_id]
+            model_id = (model_id + 1) % 2
+            model_off = not model_off
             rate.sleep()
