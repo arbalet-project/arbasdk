@@ -1,4 +1,4 @@
-from pygame import init, event, joystick, JOYBUTTONDOWN, QUIT
+from pygame import init, event, joystick, JOYBUTTONDOWN, QUIT, MOUSEBUTTONDOWN, MOUSEBUTTONUP
 from threading import RLock, Thread
 from copy import copy
 from .rate import Rate
@@ -79,13 +79,14 @@ class Events(Thread):
         """
         self.running = True
         while self.running:
-            system_events = self._get()  # Get the system event list
+            self.system_events = self._get()  # Get the system event list
             if self._runtime_control:
                 # Check for the touch toggling signal
-                for ev in system_events:
+                for ev in self.system_events:
                     if ev.type == JOYBUTTONDOWN and ev.button in self._arbalet.joystick['touch']:
                         self._arbalet.touch.toggle_touch()
-                        break
+                    if ev.type in [MOUSEBUTTONDOWN, MOUSEBUTTONUP]:
+                        self._arbalet.handle_mouse_event(ev)
                     if ev.type == QUIT:
                         if self._arbalet.arbasim is not None:
                             self._arbalet.arbasim.close()

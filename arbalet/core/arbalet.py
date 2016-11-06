@@ -102,6 +102,10 @@ class Arbalet(object):
             with self._models['touch']:
                 return self._models['user'] + self._models['touch']
 
+    def handle_mouse_event(self, event):
+        if self._simulation:
+            self.arbasim.simulate_touch_event(event)
+
     def close(self, reason='unknown'):
         if self._simulation:
             self.arbasim.close()

@@ -11,9 +11,9 @@ from os.path import dirname, join
 from .rate import Rate
 from threading import Thread
 from os import environ
-from pygame import color, display, draw, Rect, error, QUIT, init
+from pygame import color, display, draw, Rect, error, MOUSEBUTTONDOWN, init
 from pygame.image import load_extended, get_extended
-from pygame.event import peek
+from pygame import mouse
 
 __all__ = ['Simulator']
 
@@ -44,6 +44,11 @@ class Simulator(Thread):
         self.running = False
         self.start()
 
+    def simulate_touch_event(self, event):
+        pos = mouse.get_pos()
+        pixel = int(pos[0] / self.cell_width), int(pos[1] / self.cell_height)
+        self.arbalet.touch.create_event_from_pixel(pixel[1], pixel[0], event.type==MOUSEBUTTONDOWN)
+
     def close(self):
         self.running = False
 
@@ -62,7 +67,7 @@ class Simulator(Thread):
                                          self.cell_width,
                                          self.cell_height))
 
-                #Draw vertical lines
+                # Draw vertical lines
                 for w in range(self.arbalet.width):
                     draw.line(self.display, color.Color(40, 40, 40), (w*self.cell_width, 0), (w*self.cell_width, self.sim_height), self.border_thickness)
                 # Draw horizontal lines

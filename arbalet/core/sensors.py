@@ -60,6 +60,17 @@ class CapacitiveTouch(object):
             self._touch_events.append(event)
             self._touch_keys_booleans[button] = pressed
 
+    def create_event_from_pixel(self, h, w, pressed):
+        if self._config['touch']['num_keys'] > 0:
+            for touch_key_id, touch_key in enumerate(self._config['touch']['keys']):
+                for touch_pixel in touch_key:
+                    if touch_pixel[0] == h and touch_pixel[1] == w:
+                        event = { 'id': touch_key_id, 'pressed': pressed }
+                        self._touch_events.append(event)
+                        return
+            # print('Unknown clicked pixel {}, {} for touch simulation'.format(h, w))
+            # No matching can be found if the mouse has moved (especially if refresh rate is low)
+
     def create_event(self, touch, keys):
         """
         Entry point of the table connection interface
