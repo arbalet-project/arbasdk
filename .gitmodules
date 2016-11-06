@@ -4,3 +4,6 @@
 [submodule "hardware/arduino/Adafruit_MPR121"]
 	path = hardware/arduino/Adafruit_MPR121
 	url = https://github.com/adafruit/Adafruit_MPR121.git
+[submodule "hardware/arduino/Adafruit-WS2801-Library"]
+	path = hardware/arduino/Adafruit-WS2801-Library
+	url = https://github.com/adafruit/Adafruit-WS2801-Library.git
