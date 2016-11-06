@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
+from os import listdir
+from os.path import join
+
+config_dir = join('arbalet', 'config')
+json_config_files = (config_dir, [join(config_dir, file) for file in listdir(config_dir) if '.json' in file])
 
 setup(
     name='arbalet_core',
@@ -26,13 +31,9 @@ setup(
         "Topic :: Games/Entertainment",
     ],
 
-    data_files=[('arbalet/config', ['arbalet/config/config150.json']),
-                ('arbalet/config', ['arbalet/config/config150touch.json']),
-                ('arbalet/config', ['arbalet/config/config300.json']),
-                ('arbalet/config', ['arbalet/config/default.cfg']),
-                ('arbalet/config', ['arbalet/config/joyF710.json']),
-                ('arbalet/config', ['arbalet/config/joyRumblepad.json']),
-                ('arbalet/core', ['arbalet/core/icon.png'])
+    data_files=[('arbalet/config', ['arbalet/config/default.cfg']),
+                ('arbalet/core', ['arbalet/core/icon.png']),
+                json_config_files
     ],
 
     packages=find_packages(),
