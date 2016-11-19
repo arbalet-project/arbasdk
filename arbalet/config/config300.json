@@ -1,6 +1,7 @@
 {
+    "leds_pin_number": 42,
     "vertical": true, 
-    "refresh_rate": 25, 
+    "refresh_rate": 15, 
     "mapping": [
         [
             0, 
