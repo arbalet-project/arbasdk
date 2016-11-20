@@ -114,6 +114,7 @@ class Arbalink(Thread):
         if hello == self.CMD_HELLO:
             self.write_char(self.CMD_HELLO)
             version = self.read_uint8()
+            assert version != self.CMD_HELLO, "Hardware has reset unexpectedly during handshake, check wiring and configuration file"
             assert version == self.PROTOCOL_VERSION, "Hardware uses protocol v{}, SDK uses protocol v{}".format(version, self.PROTOCOL_VERSION)
             self.write_short(self._arbalet.end_model.get_height()*self._arbalet.end_model.get_width())
             self.write_uint8(self._arbalet.config['leds_pin_number'])
