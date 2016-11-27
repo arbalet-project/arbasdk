@@ -110,11 +110,10 @@ class ArduinoLink(AbstractLink):
         else:
             raise IOError("Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
 
-    def get_serial_frame(self):
+    def get_serial_frame(self, end_model):
         def __limit(v):
             return int(max(0, min(255, v)))
         
-        end_model = self._arbalet.end_model
         array = bytearray(' '*(end_model.get_height()*end_model.get_width()*3), 'ascii')
         for h in range(end_model.get_height()):
             for w in range(end_model.get_width()):
@@ -140,10 +139,11 @@ class ArduinoLink(AbstractLink):
         if self._arbalet.touch is not None and self._arbalet.config['touch']['num_keys'] > 0:
             self._arbalet.touch.create_event(touch_int, keys)
 
-    def write_led_frame(self, frame):
+    def write_led_frame(self, end_model):
         ready = self.read_char()
         commands = [self.CMD_BUFFER_READY, self.CMD_BUFFER_READY_DATA_FOLLOWS]
         if ready in commands:
+            frame = self.get_serial_frame(end_model)
             self._serial.write(frame)
         elif len(ready)>0:
             raise IOError("Expected one command of {}, got {}".format(commands, ready))

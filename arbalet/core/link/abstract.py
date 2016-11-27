@@ -49,21 +49,17 @@ class AbstractLink(Thread):
     def close(self):
         self._running = False
 
-    def get_serial_frame(self):
-        raise NotImplementedError()
-
     def read_touch_frame(self):
         raise NotImplementedError()
 
-    def write_led_frame(self, frame):
+    def write_led_frame(self, end_model):
         raise NotImplementedError()
 
     def run(self):
         while (self._running):
             if self.is_connected():
-                array = self.get_serial_frame()
                 try:
-                    data_follows = self.write_led_frame(array)
+                    data_follows = self.write_led_frame(self._arbalet.end_model)
                     if data_follows:
                         self.read_touch_frame()
                 except (SerialException, OSError, error) as e:
