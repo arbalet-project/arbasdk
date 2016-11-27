@@ -9,7 +9,7 @@
 """
 
 from .arbasim import Simulator
-from .arbalink import Arbalink
+from .link import Arbalink
 from .arbaclient import Arbaclient
 from .arbamodel import Model
 from .events import Events
@@ -84,7 +84,7 @@ class Arbalet(object):
             self.arbasim = Simulator(self, self.height*factor_sim, self.width*factor_sim)
 
         if self._hardware:
-            self.arbalink = Arbalink(self, self.diminution)
+            self.arbalink = Arbalink.factory(self)
 
         if len(self._server)>0:
             server = self._server.split(':')

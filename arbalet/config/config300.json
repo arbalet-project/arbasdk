@@ -1,4 +1,5 @@
 {
+    "controller": "arduino",
     "leds_pin_number": 42,
     "vertical": true, 
     "refresh_rate": 15, 

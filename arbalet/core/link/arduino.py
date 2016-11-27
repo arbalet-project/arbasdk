@@ -1,6 +1,6 @@
 """
     Arbalet - ARduino-BAsed LEd Table
-    Arbalink - Arbalet Link to the hardware table
+    ArduinoLink - Arbalet Link to the hardware table using Arduino
 
     Handle the connection to Arduino
 
@@ -8,17 +8,15 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from __future__ import print_function  # py2 stderr
-from threading import Thread
+from .abstract import AbstractLink
 from serial import Serial, SerialException
 from struct import pack, unpack, error
 from sys import stderr
-from time import sleep
-from .rate import Rate
 from os import name
 
-__all__ = ['Arbalink']
+__all__ = ['ArduinoLink']
 
-class Arbalink(Thread):
+class ArduinoLink(AbstractLink):
     CMD_HELLO = b'H'
     CMD_BUFFER_READY = b'B'
     CMD_BUFFER_READY_DATA_FOLLOWS = b'D'
@@ -26,21 +24,12 @@ class Arbalink(Thread):
     CMD_CLIENT_INIT_FAILURE = b'F'
     PROTOCOL_VERSION = 2
     
-    def __init__(self, arbalet, diminution=1, autorun=True):
-        """
-        Create a thread in charge of the serial connection to hardware
-        :param arbalet: The reference to arbalet controller (its touch interface can be modified)
-        :param diminution: Brightness of the table from 0.0 to 1.0
-        :param autorun: Start automatically
-        """
-        Thread.__init__(self)
-        self.setDaemon(True)
+    def __init__(self, arbalet, diminution=1):
+        super(ArduinoLink, self).__init__(arbalet, diminution)
         self._current_device = 0
         self._serial = None
         self._diminution = diminution
-        self._running = True
         self._arbalet = arbalet
-        self._rate = Rate(self._arbalet.config['refresh_rate'])
         self._connected = False
 
         if name=='nt':  # reserved names: 'posix', 'nt', 'os2', 'ce', 'java', 'riscos'
@@ -48,8 +37,7 @@ class Arbalink(Thread):
         else:
             self._platform = 'unix'
 
-        if autorun:
-            self.start()
+        self.start()
 
     def connect(self):
         if self._serial:
@@ -69,15 +57,6 @@ class Arbalink(Thread):
                 print("[Arbalink] Handshake failure: {}".format(str(e)), file=stderr)
                 return False
             return True
-
-    def connect_forever(self):
-        success = False
-        while not success:
-            success = self.connect()
-            if success:
-                break
-            sleep(0.5)
-        return success
 
     def is_connected(self):
         return self._serial is not None and self._serial.isOpen() and self._connected
@@ -131,9 +110,6 @@ class Arbalink(Thread):
         else:
             raise IOError("Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
 
-    def close(self, reason='unknown'):
-        self._running = False
-
     def get_serial_frame(self):
         def __limit(v):
             return int(max(0, min(255, v)))
@@ -164,7 +140,7 @@ class Arbalink(Thread):
         if self._arbalet.touch is not None and self._arbalet.config['touch']['num_keys'] > 0:
             self._arbalet.touch.create_event(touch_int, keys)
 
-    def write_serial_frame(self, frame):
+    def write_led_frame(self, frame):
         ready = self.read_char()
         commands = [self.CMD_BUFFER_READY, self.CMD_BUFFER_READY_DATA_FOLLOWS]
         if ready in commands:
@@ -174,19 +150,8 @@ class Arbalink(Thread):
         data_follows = ready == self.CMD_BUFFER_READY_DATA_FOLLOWS
         return data_follows
 
-    def run(self):
-        while(self._running):
-            if self.is_connected():
-                array = self.get_serial_frame()
-                try:
-                    data_follows = self.write_serial_frame(array)
-                    if data_follows:
-                        self.read_touch_frame()
-                except (SerialException, OSError, error) as e:
-                    self._connected = False
-                self._rate.sleep()
-            else:
-                self.connect_forever()
+    def close(self):
+        super(ArduinoLink, self).close()
         if self._serial:
             self._serial.close()
             self._serial = None
