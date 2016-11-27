@@ -7,8 +7,6 @@
 """
 from __future__ import print_function  # py2 stderr
 from threading import Thread
-from serial import SerialException
-from struct import error
 from time import sleep
 from ..rate import Rate
 
@@ -36,9 +34,9 @@ class AbstractLink(Thread):
 
     def connect_forever(self):
         success = False
-        while not success:
-            success = self.connect()
-            if success:
+        while not self.is_connected():
+            self.connect()
+            if self.is_connected():
                 break
             sleep(0.5)
         return success
@@ -65,12 +63,9 @@ class AbstractLink(Thread):
     def run(self):
         while (self._running):
             if self.is_connected():
-                try:
-                    data_follows = self.write_led_frame(self._arbalet.end_model)
-                    if data_follows:
-                        self.read_touch_frame()
-                except (SerialException, OSError, error) as e:
-                    self._connected = False
+                data_follows = self.write_led_frame(self._arbalet.end_model)
+                if data_follows:
+                    self.read_touch_frame()
                 self._rate.sleep()
             else:
                 self.connect_forever()
