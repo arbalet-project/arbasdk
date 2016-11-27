@@ -1,11 +1,11 @@
-from pygame import init, event, joystick, JOYBUTTONDOWN, QUIT, MOUSEBUTTONDOWN, MOUSEBUTTONUP
+from pygame import display, event, joystick, JOYBUTTONDOWN, QUIT, MOUSEBUTTONDOWN, MOUSEBUTTONUP
 from threading import RLock, Thread
 from copy import copy
 from .rate import Rate
 
 class Events(Thread):
     """
-    Arbalet Events manager, also in charge of pygame init and quit
+    Arbalet Events manager
     """
 
     EVENT_NUM_LIMIT = 1000
@@ -29,7 +29,7 @@ class Events(Thread):
 
         # All joysticks are enabled by default
         with self._arbalet.sdl_lock:
-            init()
+            display.init()
             joystick.init()
             for j in range(joystick.get_count()):
                 joy = joystick.Joystick(j)

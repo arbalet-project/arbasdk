@@ -10,7 +10,6 @@
 """
 
 from .arbalet import Arbalet
-from pygame import init as pygame_init
 import argparse
 
 __all__ = ['Application']
@@ -23,7 +22,6 @@ class Application(object):
             raise RuntimeError('Application can be instanciated only once')
 
         Application.app_declared = True
-        pygame_init()
         self.read_args(argparser)
         self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
                                self.args.server, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
