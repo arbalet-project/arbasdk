@@ -49,6 +49,13 @@ class AbstractLink(Thread):
     def close(self):
         self._running = False
 
+    def map_pixel_to_led(self, h, w):
+        try:
+            return self._arbalet.config['mapping'][h][w]
+        except IndexError as e:
+            self.close()
+            raise IndexError('Incorrect mapping, please check your configuration file, arbalink exiting...')
+
     def read_touch_frame(self):
         raise NotImplementedError()
 
