@@ -56,6 +56,6 @@ class RPiLink(AbstractLink):
     def write_led_frame(self, end_model):
         for h in range(end_model.get_height()):
             for w in range(end_model.get_width()):
-                r, g, b = end_model._model[h][w].r, end_model._model[h][w].g, end_model._model[h][w].b
+                r, g, b = end_model._model[h][w][0], end_model._model[h][w][1], end_model._model[h][w][2]
                 self.leds.setPixelColor(self.map_pixel_to_led(h, w), Color(g, r, b))
         self.leds.show()

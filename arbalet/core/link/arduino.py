@@ -119,9 +119,9 @@ class ArduinoLink(AbstractLink):
             for w in range(end_model.get_width()):
                 idx = self.map_pixel_to_led(h, w)*3 # = mapping shift by 3 colors
                 pixel = end_model._model[h][w]
-                array[idx] = __limit(pixel.r*self._diminution)
-                array[idx+1] = __limit(pixel.g*self._diminution)
-                array[idx+2] = __limit(pixel.b*self._diminution)
+                array[idx] = __limit(pixel[0]*self._diminution)
+                array[idx+1] = __limit(pixel[1]*self._diminution)
+                array[idx+2] = __limit(pixel[2]*self._diminution)
         return array
 
     def read_touch_frame(self):

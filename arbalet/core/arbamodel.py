@@ -7,35 +7,33 @@
     Copyright 2015 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
-
-from .arbapixel import Pixel
+import numpy as np
+import json
 from copy import deepcopy
 from itertools import product
 from threading import RLock
 from time import time
 from .arbafont import Font
 from .rate import Rate
+from .colors import name_to_rgb
 
 __all__ = ['Model']
 
 class Model(object):
     # line, column
-    def __init__(self, height, width, color):
+    def __init__(self, height, width, color=None):
         self.height = height
         self.width = width
         self.font = None
 
         self._model_lock = RLock()
-        self._model = [[Pixel(color) if len(color)>0 else Pixel('black') for j in range(width)] for i in range(height)]
+        self._model = np.zeros((height, width, 3), dtype=int)
+
+        if color is not None:
+            self.set_all(color)
 
     def copy(self):
         return deepcopy(self)
-
-    def lock(self):
-        self._model_lock.acquire()
-
-    def unlock(self):
-        self._model_lock.release() # throws RuntimeError if an unlock attempt is made while not locked
 
     def get_width(self):
         return self.width
@@ -44,70 +42,73 @@ class Model(object):
         return self.height
 
     def get_pixel(self, h, w):
-        return self._model[h][w]
+        return self._model[h, w]
 
     def set_pixel(self, h, w, color):
-        self._model[h][w] = Pixel(color)
+        if isinstance(color, str):
+            color = name_to_rgb(color)
+        self._model[h, w] = color
+
+    def set_line(self, h, color):
+        if isinstance(color, str):
+            color = name_to_rgb(color)
+        for w in range(self.width):
+            self._model[h, w] = color
+
+    def set_column(self, w, color):
+        if isinstance(color, str):
+            color = name_to_rgb(color)
+        for h in range(self.height):
+            self._model[h, w] = color
 
     def get_all_combinations(self):
         return map(tuple, product(range(self.height), range(self.width)))
 
     def set_all(self, color):
+        if isinstance(color, str):
+            color = name_to_rgb(color)
         for w in range(self.width):
             for h in range(self.height):
-                self.set_pixel(h, w, color)
+                self._model[h, w] = color
 
     def __enter__(self):
-        self.lock()
+        self._model_lock.acquire()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.unlock()
+        self._model_lock.release()
 
     def __add__(self, other):
-        model = Model(self.height, self.width, 'black')
-        for w in range(self.width):
-            for h in range(self.height):
-                model._model[h][w] = self._model[h][w] + other._model[h][w]
-        return model
+        m = Model(self.height, self.width)
+        m._model = np.clip(self._model + other._model, 0, 255)
+        return m
 
     def __eq__(self, other):
-        for w in range(self.width):
-            for h in range(self.height):
-                if self._model[h][w] != other._model[h][w]:
-                    return False
-        return True
+        return self._model == other._model
 
     def __sub__(self, other):
-        model = Model(self.height, self.width, 'black')
-        for w in range(self.width):
-            for h in range(self.height):
-                model._model[h][w] = self._model[h][w] - other._model[h][w]
-        return model
+        m = Model(self.height, self.width)
+        m._model = np.clip(self._model - other._model, 0, 255)
+        return m
 
     def __repr__(self):
-        return self.__str__()
+        return repr(self._model)
 
     def __str__(self):
         return str(self._model)
 
-    def __mul__(self, m):
-        model = Model(self.height, self.width)
-        for w in range(self.width):
-            for h in range(self.height):
-                model._model[h][w] = self._model[h][w]*m
-        return model
+    def __mul__(self, scalar):
+        m = Model(self.height, self.width)
+        m._model = np.clip(scalar*self._model, 0, 255)
+        return m
 
     def to_json(self):
-        return [[p.to_json() for p in self._model[num_row]] for num_row, row in enumerate(self._model)]
+        def to_json(self):
+            return json.dumps(self._model.tolist())
 
     def from_json(self, json_model):
-        height = len(json_model)
-        width = len(json_model[0]) if height>0 else 0
-        if height!=self.get_height() or width!=self.get_width():
-            raise ValueError("Data received have size [{}, {}] while model expects [{}, {}]".format(height, width, self.get_height(), self.get_width()))
-        for w in range(width):             # TODO Find sth more efficient that constructing objects and browsing lists so much
-            for h in range(height):
-                self.set_pixel(h, w, json_model[h][w])
+        self._model = json.loads(json_model)
+        self.height = self._model.shape[0]
+        self.width = self._model.shape[1]
 
     def set_font(self, font=None, vertical=True):
         """
@@ -156,7 +157,7 @@ class Model(object):
         t0 = time()
         model_id = 0
         with self._model_lock:
-            models = [[[Pixel('black') for j in range(self.width)] for i in range(self.height)], self._model]
+            models = [Model(self.height, self.width), self._model]
 
         model_off = False
         while time()-t0 < duration or model_off:
