@@ -46,7 +46,9 @@ class RPiLink(AbstractLink):
         try:
             self.leds.begin()
         except RuntimeError as e:
-            raise RuntimeError(repr(e) + "\n WS2811 driver for RPi requires root permissions, are you actually root?")
+            raise RuntimeError(repr(e) +
+                               "\nWS2811 driver for RPi requires root permissions, are you actually root?"
+                               "\nAlso make sure that PIN{} is PWM-capable".format(self._arbalet.config['leds_pin_number']))
         else:
             self._connected = True
 

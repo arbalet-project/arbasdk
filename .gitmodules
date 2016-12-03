@@ -7,3 +7,6 @@
 [submodule "hardware/arduino/Adafruit-WS2801-Library"]
 	path = hardware/arduino/Adafruit-WS2801-Library
 	url = https://github.com/adafruit/Adafruit-WS2801-Library.git
+[submodule "hardware/raspberrypi/rpi_ws281x"]
+	path = hardware/raspberrypi/rpi_ws281x
+	url = https://github.com/ymollard/rpi_ws281x.git
