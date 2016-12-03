@@ -73,7 +73,7 @@ class RPiLink(AbstractLink):
             for w in range(end_model.get_width()):
                 index = self.map_pixel_to_led(h, w)
 
-                r, g, b = end_model._model[h][w].r, end_model._model[h][w].g, end_model._model[h][w].b
+                r, g, b = end_model._model[h][w][0], end_model._model[h][w][1], end_model._model[h][w][2]
                 self.data[index*3] = g
                 self.data[index*3+1] = r
                 self.data[index*3+2] = b
