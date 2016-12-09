@@ -255,3 +255,16 @@ def mul(pixel, scalar):
     if not isscalar(scalar):
         raise TypeError("Expected a scalar for pixel multiplication, got {}".format(type(scalar)))
     return pixel*scalar
+
+
+def equal(pixel_1, pixel_2):
+    """
+    Return true if these two colors are strictly equal
+    :param pixel_1: Color name or tuple, list, array
+    :param pixel_2: Color name or tuple, list, array
+    :return: True if they are strictly equal, False otherwise
+    """
+    pixel_1 = __to_array(pixel_1)
+    pixel_2 = __to_array(pixel_2)
+
+    return (pixel_1 == pixel_2).all(0)
