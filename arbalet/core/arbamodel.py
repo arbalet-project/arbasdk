@@ -21,16 +21,17 @@ __all__ = ['Model']
 
 class Model(object):
     # line, column
-    def __init__(self, height, width, color=None):
+    def __init__(self, height, width, color=(0, 0, 0)):
         self.height = height
         self.width = width
         self.font = None
 
         self._model_lock = RLock()
-        self._model = np.zeros((height, width, 3), dtype=float)
 
-        if color is not None:
-            self.set_all(color)
+        if isinstance(color, str):
+            color = name_to_rgb(color)
+        self._model = np.tile(color, (height, width, 1)).astype(float)
+
 
     def copy(self):
         return deepcopy(self)
