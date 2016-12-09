@@ -83,15 +83,15 @@ class Model(object):
 
     def __add__(self, other):
         m = Model(self.height, self.width)
-        m._model = np.clip(self._model + other._model, 0, 255)
+        m._model = self._model + other._model
         return m
 
     def __eq__(self, other):
-        return self._model == other._model
+        return (self._model == other._model).all()
 
     def __sub__(self, other):
         m = Model(self.height, self.width)
-        m._model = np.clip(self._model - other._model, 0, 255)
+        m._model = self._model - other._model
         return m
 
     def __repr__(self):
@@ -102,7 +102,7 @@ class Model(object):
 
     def __mul__(self, scalar):
         m = Model(self.height, self.width)
-        m._model = np.clip(scalar*self._model, 0, 255)
+        m._model = scalar*self._model
         return m
 
     def to_json(self):
@@ -161,7 +161,7 @@ class Model(object):
         t0 = time()
         model_id = 0
         with self._model_lock:
-            models = [Model(self.height, self.width), self._model]
+            models = [np.zeros((self.height, self.width, 3)), self._model]
 
         model_off = False
         while time()-t0 < duration or model_off:
