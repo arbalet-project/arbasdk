@@ -55,12 +55,12 @@ class Simulator(Thread):
     def run(self):
         self.running = True
         while self.running:
-            model = self.arbalet.end_model
+            model = self.arbalet.end_model.data_frame
             with self.arbalet.sdl_lock:
                 self.display.lock()
                 for w in range(self.arbalet.width):
                     for h in range(self.arbalet.height):
-                        pixel = model.get_pixel(h, w)
+                        pixel = model[h, w]
                         self.display.fill(color.Color(pixel[0], pixel[1], pixel[2]),
                                          Rect(w*self.cell_width,
                                          h*self.cell_height,

@@ -111,17 +111,15 @@ class ArduinoLink(AbstractLink):
             raise IOError("Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
 
     def get_serial_frame(self, end_model):
-        def __limit(v):
-            return int(max(0, min(255, v)))
+        frame = end_model.data_frame
         
         array = bytearray(' '*(end_model.get_height()*end_model.get_width()*3), 'ascii')
         for h in range(end_model.get_height()):
             for w in range(end_model.get_width()):
                 idx = self.map_pixel_to_led(h, w)*3 # = mapping shift by 3 colors
-                pixel = end_model._model[h][w]
-                array[idx] = __limit(pixel[0]*self._diminution)
-                array[idx+1] = __limit(pixel[1]*self._diminution)
-                array[idx+2] = __limit(pixel[2]*self._diminution)
+                array[idx] = frame[h][w][0]
+                array[idx+1] = frame[h][w][1]
+                array[idx+2] = frame[h][w][2]
         return array
 
     def read_touch_frame(self):

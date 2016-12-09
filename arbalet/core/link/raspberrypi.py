@@ -69,11 +69,12 @@ class RPiLink(AbstractLink):
         # spi.xfer(tx.tolist(), int(8e6))
 
     def write_led_frame(self, end_model):
+        frame = end_model.data_frame
         for h in range(end_model.get_height()):
             for w in range(end_model.get_width()):
                 index = self.map_pixel_to_led(h, w)
 
-                r, g, b = end_model._model[h][w][0], end_model._model[h][w][1], end_model._model[h][w][2]
+                r, g, b = frame[h][w][0], frame[h][w][1], frame[h][w][2]
                 self.data[index*3] = g
                 self.data[index*3+1] = r
                 self.data[index*3+2] = b

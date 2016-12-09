@@ -27,7 +27,7 @@ class Model(object):
         self.font = None
 
         self._model_lock = RLock()
-        self._model = np.zeros((height, width, 3), dtype=int)
+        self._model = np.zeros((height, width, 3), dtype=float)
 
         if color is not None:
             self.set_all(color)
@@ -43,6 +43,10 @@ class Model(object):
 
     def get_pixel(self, h, w):
         return self._model[h, w]
+
+    @property
+    def data_frame(self):
+        return np.clip((255*self._model).astype(int), 0, 255)
 
     def set_pixel(self, h, w, color):
         if isinstance(color, str):
