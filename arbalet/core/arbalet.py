@@ -14,7 +14,6 @@ from .arbaclient import Arbaclient
 from .arbamodel import Model
 from .events import Events
 from .sensors import CapacitiveTouch
-from functools import reduce
 from os import path
 from json import load
 from configparser import RawConfigParser

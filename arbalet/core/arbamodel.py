@@ -15,7 +15,7 @@ from threading import RLock
 from time import time
 from .arbafont import Font
 from .rate import Rate
-from .colors import name_to_rgb
+from ..colors import name_to_rgb
 
 __all__ = ['Model']
 
