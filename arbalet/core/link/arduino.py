@@ -104,11 +104,11 @@ class ArduinoLink(AbstractLink):
                 self._connected = True
                 return True
             elif init_result == self.CMD_CLIENT_INIT_FAILURE:
-                raise IOError("Arduino can't allocate memory, init failure")
+                raise ValueError("Arduino can't allocate memory, init failure")
             else:
-                raise IOError("Expected one command of {}, got {}".format([self.CMD_CLIENT_INIT_SUCCESS, self.CMD_CLIENT_INIT_FAILURE], init_result))
+                raise ValueError("Expected one command of {}, got {}".format([self.CMD_CLIENT_INIT_SUCCESS, self.CMD_CLIENT_INIT_FAILURE], init_result))
         else:
-            raise IOError("Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
+            raise ValueError("Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
 
     def get_serial_frame(self, end_model):
         frame = end_model.data_frame
@@ -123,25 +123,35 @@ class ArduinoLink(AbstractLink):
         return array
 
     def read_touch_frame(self):
-        touch_int = self.read_short()
-        num_keys = self._arbalet.config['touch']['num_keys']
-        keys = []
-        for key in range(num_keys):
-            key_state = self.read_short()
-            keys.append(key_state)
-        if self._arbalet.touch is not None and self._arbalet.config['touch']['num_keys'] > 0:
-            self._arbalet.touch.create_event(touch_int, keys)
+        try:
+            touch_int = self.read_short()
+            num_keys = self._arbalet.config['touch']['num_keys']
+            keys = []
+            for key in range(num_keys):
+                key_state = self.read_short()
+                keys.append(key_state)
+        except (IOError, SerialException,) as e:
+            self._serial.close()
+            self._connected = False
+        else:
+            if self._arbalet.touch is not None and self._arbalet.config['touch']['num_keys'] > 0:
+                self._arbalet.touch.create_event(touch_int, keys)
 
     def write_led_frame(self, end_model):
-        ready = self.read_char()
-        commands = [self.CMD_BUFFER_READY, self.CMD_BUFFER_READY_DATA_FOLLOWS]
-        if ready in commands:
-            frame = self.get_serial_frame(end_model)
-            self._serial.write(frame)
-        elif len(ready)>0:
-            raise IOError("Expected one command of {}, got {}".format(commands, ready))
-        data_follows = ready == self.CMD_BUFFER_READY_DATA_FOLLOWS
-        return data_follows
+        try:
+            ready = self.read_char()
+            commands = [self.CMD_BUFFER_READY, self.CMD_BUFFER_READY_DATA_FOLLOWS]
+            if ready in commands:
+                frame = self.get_serial_frame(end_model)
+                self._serial.write(frame)
+            elif len(ready)>0:
+                raise ValueError("Expected one command of {}, got {}".format(commands, ready))
+        except (IOError, SerialException, ) as e:
+            self._serial.close()
+            self._connected = False
+        else:
+            data_follows = ready == self.CMD_BUFFER_READY_DATA_FOLLOWS
+            return data_follows
 
     def close(self):
         super(ArduinoLink, self).close()
