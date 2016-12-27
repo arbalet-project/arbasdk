@@ -20,15 +20,16 @@ except ImportError as e:
 class RPiLink(AbstractLink):
     def __init__(self, arbalet, diminution=1):
         super(RPiLink, self).__init__(arbalet, diminution)
+        self.arbalet = arbalet
         self._connected = False
         self.check_import()
         brightness = min(255, max(1, int(255*diminution)))  # TODO take into account
-        self.count = arbalet.height * arbalet.width
+        self.count = self.arbalet.height * self.arbalet.width
         self.count_spi_bytes = self.count*3
         self.data = np.zeros(self.count_spi_bytes, dtype=np.uint8)
         self.tx = np.zeros(self.count_spi_bytes * 4, dtype=np.uint8)
         self.spi = spidev.SpiDev()
-        self.speed = int(4 / 1.25e-6)  # TODO
+        self.speed = self.arbalet.config["spi"]["speed"]
         self.start()
 
     def check_import(self):
@@ -42,7 +43,7 @@ class RPiLink(AbstractLink):
         return self._connected
 
     def connect(self):
-        self.spi.open(0, 0)  # TODO config file
+        self.spi.open(self.arbalet.config['spi']['bus'], self.arbalet.config['spi']['device'])
         self._connected = True
 
     def read_touch_frame(self):
@@ -55,18 +56,7 @@ class RPiLink(AbstractLink):
         for ibit in range(4):
             self.tx[3 - ibit::4] = ((self.data >> (2 * ibit + 1)) & 1) * 0x60 + ((self.data >> (2 * ibit + 0)) & 1) * 0x06 + 0x88
 
-        self.spi.xfer(self.tx.tolist(), self.speed)  # works, on Zero (initially didn't?)
-        # spi.xfer(tx.tolist(), int(4/1.20e-6))  #works, no flashes on Zero, Works on Raspberry 3
-        # spi.xfer(tx.tolist(), int(4/1.15e-6))  #works, no flashes on Zero
-        # spi.xfer(tx.tolist(), int(4/1.05e-6))  #works, no flashes on Zero
-        # spi.xfer(tx.tolist(), int(4/.95e-6))  #works, no flashes on Zero
-        # spi.xfer(tx.tolist(), int(4/.90e-6))  #works, no flashes on Zero
-        # spi.xfer(tx.tolist(), int(4/.85e-6))  #doesn't work (first 4 LEDS work, others have flashing colors)
-        # spi.xfer(tx.tolist(), int(4/.65e-6))  #doesn't work on Zero; Works on Raspberry 3
-        # spi.xfer(tx.tolist(), int(4/.55e-6))  #doesn't work on Zero; Works on Raspberry 3
-        # spi.xfer(tx.tolist(), int(4/.50e-6))  #doesn't work on Zero; Doesn't work on Raspberry 3 (bright colors)
-        # spi.xfer(tx.tolist(), int(4/.45e-6))  #doesn't work on Zero; Doesn't work on Raspberry 3
-        # spi.xfer(tx.tolist(), int(8e6))
+        self.spi.xfer(self.tx.tolist(), self.speed)
 
     def write_led_frame(self, end_model):
         frame = end_model.data_frame
