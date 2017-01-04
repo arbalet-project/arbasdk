@@ -3,19 +3,15 @@
     Arbalet - ARduino-BAsed LEd Table
     Arbalink - Low-level Arduino code to be loaded on the microcontroller
     WS2801 version
-    
+   
 
     Copyright 2015 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 */
 
 #include <Wire.h>
-#include <Adafruit_MPR121.h>
 #include <Adafruit_WS2801.h>
 #include "SPI.h" // Comment out this line if using Trinket or Gemma
-
-uint8_t dataPin  = 2;    // Yellow wire on Adafruit Pixels
-uint8_t clockPin = 3;    // Green wire on Adafruit Pixels
 
 #define CMD_HELLO 'H'
 #define CMD_BUFFER_READY 'B'
@@ -30,7 +26,6 @@ char pin_num = 255;
 char touch_type = 255;
 
 Adafruit_WS2801 *pixels = NULL;
-Adafruit_MPR121 *touch = NULL;
 char *buffer;
 char rgb[3];
 
@@ -70,10 +65,6 @@ void free_allocated_memory() {
     delete(pixels);
     pixels = NULL;
   }
-  if(touch!=NULL) {
-    delete(touch);
-    touch = NULL;
-  }
   if(buffer!=NULL) {
     free(buffer);
     buffer = NULL;
@@ -90,27 +81,17 @@ boolean handshake() {
   if(pin_num==0) return false;
   touch_type = read_char(); // default: 0 (off)
   if(touch_type==255) return false;
-  
+ 
   /* Memory allocation */
   free_allocated_memory();  // TODO, do not free, updating existing objects would be faster
-  pixels = new Adafruit_WS2801(leds_num, dataPin, clockPin);
-  
-  /* Init the touch sensor if enabled */
-  boolean touch_init = false;
-  if(touch_type>0) {
-      touch = new Adafruit_MPR121();
-      touch_init = touch? touch->begin() : false;
-  }
-  else {
-      touch_init = true;
-  }
+  pixels = new Adafruit_WS2801(leds_num);
   
   /* Init the LED strip */
   buffer = (char*) malloc(3*leds_num);
   pixels->begin();
-  
+ 
   /* Check that init is fully successful */
-  write_char((buffer==NULL || pixels==NULL || touch_init==false)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
+  write_char((buffer==NULL || pixels==NULL)? CMD_INIT_FAILURE: CMD_INIT_SUCCESS);
   return true;
 }
 
@@ -129,10 +110,6 @@ boolean read_buffer(char readiness) {
 }
 
 void send_touch_frame() {
-    write_short(touch->touched());
-    for(char key=0; key<touch_type; ++key) {
-      write_short(touch->filteredData(key));
-    }
 }
 
 void update_leds_from_buffer() {
@@ -153,4 +130,4 @@ void loop() {
     else {
       wait_for_connection();
     }
-}
+} 
