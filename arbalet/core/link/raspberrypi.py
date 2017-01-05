@@ -37,7 +37,7 @@ class RPiLink(AbstractLink):
         try:
             cls = spidev
         except NameError as e:
-            raise ImportError("No spidev found, make sure you have pulled ans installed the git submodule py-spidev")
+            raise ImportError("No spidev found, make sure you have pulled and installed the git submodule py-spidev")
 
     def is_connected(self):
         return self._connected
