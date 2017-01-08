@@ -1,5 +1,0 @@
-include hardware/arduino/Arbalet/examples/Arbalink/Arbalink.ino
-include config/config150.json
-include config/default.cfg
-include config/joyRumblepad.json
-include config/joyF710.json
