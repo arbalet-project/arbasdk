@@ -20,7 +20,7 @@ class Channel(object):
             self._publisher = context.socket(zmq.PUB)
             if conflate:
                 self._publisher.setsockopt(zmq.CONFLATE, 1)
-            print("Connecting publisher to {} on channel {}".format(connect_to, channel_name))
+            print("[Arbalet D-Bus] Connecting publisher to {} on channel '{}'".format(connect_to, channel_name))
             self._publisher.connect(connect_to)
         if subscriber:
             connect_to = "tcp://{}:{}".format(host, port_sub)
@@ -28,7 +28,7 @@ class Channel(object):
             if conflate:
                 self._subscriber.setsockopt(zmq.CONFLATE, 1)
             self._subscriber.setsockopt(zmq.SUBSCRIBE, channel_name)
-            print("Connecting subscriber to {} on channel {}".format(connect_to, channel_name))
+            print("[Arbalet D-Bus] Connecting subscriber to {} on channel '{}'".format(connect_to, channel_name))
             self._subscriber.connect(connect_to)
         self.is_publisher = publisher
         self.is_subscriber = subscriber

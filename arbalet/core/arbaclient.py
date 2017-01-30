@@ -11,6 +11,7 @@
 from threading import Thread
 from .rate import Rate
 from .dbus import DBusClient
+from .config import ConfigReader
 
 __all__ = ['Arbaclient']
 
@@ -18,8 +19,9 @@ class Arbaclient(Thread):
     def __init__(self, arbalet, host='127.0.0.1'):
         Thread.__init__(self)
         self.setDaemon(True)
-        self.server = server
-        self.port = str(port)
+        self.server = host
+        config_reader = ConfigReader()
+        self.port = str(config_reader.dbus['xpub_port'])
         self.running = True
         self.rate = Rate(arbalet.config["refresh_rate"])
         self.arbalet = arbalet
@@ -28,7 +30,7 @@ class Arbaclient(Thread):
         self.start()
 
     def send_model(self):
-        self.bus.display.publish(self.arbalet.end_model.to_json())
+        self.bus.display.publish(self.arbalet.end_model.to_dict())
 
     def close(self):
         self.running = False
