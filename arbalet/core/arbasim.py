@@ -39,8 +39,7 @@ class Simulator(Thread):
                 display.set_icon(self.icon)
 
         environ['SDL_VIDEO_CENTERED'] = '1'
-        with self.arbalet.sdl_lock:
-            self.display = display.set_mode((self.sim_width, self.sim_height), 0, 32)
+        self.display = display.set_mode((self.sim_width, self.sim_height), 0, 32)
         self.running = False
         self.start()
 
@@ -56,26 +55,24 @@ class Simulator(Thread):
         self.running = True
         while self.running:
             model = self.arbalet.end_model.data_frame
-            with self.arbalet.sdl_lock:
-                self.display.lock()
-                for w in range(self.arbalet.width):
-                    for h in range(self.arbalet.height):
-                        pixel = model[h, w]
-                        self.display.fill(color.Color(pixel[0], pixel[1], pixel[2]),
-                                         Rect(w*self.cell_width,
-                                         h*self.cell_height,
-                                         self.cell_width,
-                                         self.cell_height))
-
-                # Draw vertical lines
-                for w in range(self.arbalet.width):
-                    draw.line(self.display, color.Color(40, 40, 40), (w*self.cell_width, 0), (w*self.cell_width, self.sim_height), self.border_thickness)
-                # Draw horizontal lines
+            self.display.lock()
+            for w in range(self.arbalet.width):
                 for h in range(self.arbalet.height):
-                    draw.line(self.display, color.Color(40, 40, 40), (0, h*self.cell_height), (self.sim_width, h*self.cell_height), self.border_thickness)
-                display.update()
-                self.display.unlock()
+                    pixel = model[h, w]
+                    self.display.fill(color.Color(pixel[0], pixel[1], pixel[2]),
+                                     Rect(w*self.cell_width,
+                                     h*self.cell_height,
+                                     self.cell_width,
+                                     self.cell_height))
+
+            # Draw vertical lines
+            for w in range(self.arbalet.width):
+                draw.line(self.display, color.Color(40, 40, 40), (w*self.cell_width, 0), (w*self.cell_width, self.sim_height), self.border_thickness)
+            # Draw horizontal lines
+            for h in range(self.arbalet.height):
+                draw.line(self.display, color.Color(40, 40, 40), (0, h*self.cell_height), (self.sim_width, h*self.cell_height), self.border_thickness)
+            display.update()
+            self.display.unlock()
             self.rate.sleep()
 
-        with self.arbalet.sdl_lock:
-            display.quit()
+        display.quit()

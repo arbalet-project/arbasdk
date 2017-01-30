@@ -10,6 +10,7 @@
 """
 
 from .arbalet import Arbalet
+from .config import get_config_parser
 import argparse
 
 __all__ = ['Application']
@@ -25,7 +26,6 @@ class Application(object):
         self.read_args(argparser)
         self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
                                self.args.server, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
-        self.arbalet.touch.set_mode('off' if self.args.no_touch else touch_mode)
         self.width = self.arbalet.width
         self.height = self.arbalet.height
 
@@ -74,11 +74,8 @@ class Application(object):
                             nargs='?',
                             const='127.0.0.1',
                             default='',
-                            help='Address and port of the Arbaserver sharing hardware (ex: myserver.local:33400, 192.168.0.15, ...)')
-        parser.add_argument('-c', '--config',
-                            type=str,
-                            default='',
-                            help='Name of the config file describing the table (.json file), if missing the default config in arbasdk/default.cfg will be selected')
+                            help='IP or hostname of the Arbaserver sharing hardware (ex: myserver.local, 192.168.0.15, ...)'
+                                 'Do not provide port, it is specified in the D-Bus configuration file')
         parser.add_argument('-b', '--brightness',
                             type=float,
                             default=1,
@@ -93,6 +90,8 @@ class Application(object):
                             default=False,
                             help='Disable the touch feature. This option has no influence on apps that are not touch-compatible')
 
+        parser = get_config_parser(parser)
+
         # We parse args normally if running in non-interactive mode, otherwise we ignore args to avoid conflicts with ipython
         self.args = parser.parse_args([] if self.is_interactive() else None)
 
@@ -103,11 +102,8 @@ class Application(object):
     def start(self):
         try:
             self.run()
-        except:
-            self.close("Program raised exception")
-            raise
-        else:
-            self.close("Program naturally ended")
+        finally:
+            self.close()
 
-    def close(self, reason='unknown'):
-        self.arbalet.close(reason)
+    def close(self):
+        self.arbalet.close()

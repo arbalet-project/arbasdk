@@ -1,8 +1,6 @@
 """
     Arbalet - ARduino-BAsed LEd Table
-    sensor - Arbalet Sensor Manager
-
-    Generates events for sensors such as joysticks, keyboards and touch screen
+    MPR121-based 6 key touch interface
 
     Copyright 2016 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
@@ -10,18 +8,22 @@
 
 from threading import RLock
 from ..core import Model
-from json import load
+from .abstract import AbstractEvents
 from numpy import array, mean
 from collections import deque
-__all__ = ['CapacitiveTouch']
 
-class CapacitiveTouch(object):
+__all__ = ['CapacitiveTouchEvents']
+
+
+class CapacitiveTouchEvents(AbstractEvents):
     modes = ['off', 'bidirectional', 'tridirectional', 'quadridirectional', 'columns', 'individual']
-    def __init__(self, config, height, width, touch_mode='off'):
-        with open(config) as f:
-            self._config = load(f)
-
-        self._num_buttons = len(self._config['touch']['keys']) if self._config['touch']['num_keys'] > 0 else 0  # 0 button means touch-disabled hardware
+    def __init__(self, touch_mode='off'):
+        # TODO Le touch_mod varie selon les apps,
+        # TODO Il doit etre recu par D-BUS sur un canal command
+        # TODO peut publier un model ...
+        super(CapacitiveTouchEvents, self).__init__()
+        config = self.config_reader.hardware
+        self._num_buttons = len(config['touch']['keys']) if config['touch']['num_keys'] > 0 else 0  # 0 button means touch-disabled hardware
         self._touch_events = []
         self._touch_int = 0  # Last touch state (combination of booleans)
         self._touch_keys_values = []  # Filtered data of last touched keys
@@ -29,8 +31,9 @@ class CapacitiveTouch(object):
         self._events_lock = RLock()
         self._mode_lock = RLock()
         self._keypad = True
-        self._height = height
-        self._width = width
+        self._height =  config['height']
+        self._width =  config['width']
+        self._config = config
         self._model = Model(self._height, self._width, 'black')
         self._mode = 'off'
         self._old_touch_mode = 'off'  # Store the former touch mode to be able to pause or resume the touch capability

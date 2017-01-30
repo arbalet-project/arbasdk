@@ -106,15 +106,14 @@ class Model(object):
         m._model = scalar*self._model
         return m
 
-    def to_json(self):
-        return json.dumps({'h': self.height, 'w': self.width, 'm': self._model.tolist()})
+    def to_dict(self):
+        return {'h': self.height, 'w': self.width, 'm': self._model.tolist()}
 
-    def from_json(self, json_model):
+    def from_dict(self, dict_model):
         # {'h': , 'w': , 'm': }
-        frame =  json.loads(json_model)
-        self._model = np.array(frame['m'])
-        self.height = frame['h']
-        self.width = frame['w']
+        self._model = np.array(dict_model['m'])
+        self.height = dict_model['h']
+        self.width = dict_model['w']
 
     def set_font(self, font=None, vertical=True):
         """
