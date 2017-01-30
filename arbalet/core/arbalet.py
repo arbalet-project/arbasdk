@@ -12,7 +12,7 @@ from .arbasim import Simulator
 from .link import Arbalink
 from .arbaclient import Arbaclient
 from .arbamodel import Model
-from .config import ConfigReader
+from ..config import ConfigReader
 
 __all__ = ['Arbalet']
 

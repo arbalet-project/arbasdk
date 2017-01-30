@@ -10,8 +10,8 @@
 
 from threading import Thread
 from .rate import Rate
-from .dbus import DBusClient
-from .config import ConfigReader
+from ..dbus import DBusClient
+from ..config import ConfigReader
 
 __all__ = ['Arbaclient']
 

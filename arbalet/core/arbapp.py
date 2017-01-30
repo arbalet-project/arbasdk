@@ -10,7 +10,7 @@
 """
 
 from .arbalet import Arbalet
-from .config import get_config_parser
+from ..config import get_config_parser
 import argparse
 
 __all__ = ['Application']

@@ -7,7 +7,7 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from .abstract import AbstractEvents
-from ..core.dbus import DBusClient
+from ..dbus import DBusClient
 
 __all__ = ['EventClient']
 

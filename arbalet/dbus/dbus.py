@@ -8,7 +8,7 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from json import dumps, loads
-from .config import ConfigReader
+from ..config import ConfigReader
 import zmq
 
 __all__ = ['DBusClient']

@@ -6,7 +6,9 @@
     Copyright 2017 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
-from ..core.config import ConfigReader
+from ..config import ConfigReader
+
+
 __all__ = ['AbstractEvents']
 
 class AbstractEvents(object):
