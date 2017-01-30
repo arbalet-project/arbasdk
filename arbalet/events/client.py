@@ -13,9 +13,9 @@ __all__ = ['EventClient']
 
 
 class EventClient(AbstractEvents):
-    def __init__(self):
+    def __init__(self, host='127.0.0.1'):
         super(EventClient, self).__init__()
-        self.bus = DBusClient(event_subscriber=True)
+        self.bus = DBusClient(host=host, event_subscriber=True)
 
     def get(self):
         """

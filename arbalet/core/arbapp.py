@@ -11,6 +11,7 @@
 
 from .arbalet import Arbalet
 from ..config import get_config_parser
+from ..events import EventClient
 import argparse
 
 __all__ = ['Application']
@@ -28,7 +29,7 @@ class Application(object):
                                self.args.server, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
         self.width = self.arbalet.width
         self.height = self.arbalet.height
-
+        self.events = EventClient(host=self.args.server)
         self.init_font(self.model)
 
     @property
@@ -72,9 +73,9 @@ class Application(object):
         parser.add_argument('-s', '--server',
                             type=str,
                             nargs='?',
-                            const='127.0.0.1',
-                            default='',
-                            help='IP or hostname of the Arbaserver sharing hardware (ex: myserver.local, 192.168.0.15, ...)'
+                            const=True,
+                            default='localhost',
+                            help='IP or hostname of the D-Bus, Display and Event servers (ex: myserver.local, 192.168.0.15, ...)'
                                  'Do not provide port, it is specified in the D-Bus configuration file')
         parser.add_argument('-b', '--brightness',
                             type=float,
