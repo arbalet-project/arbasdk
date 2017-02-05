@@ -1,7 +1,7 @@
-from arbalet.config import ConfigReader
-from arbalet.tools import Rate
-from arbalet.dbus import DBusClient
-from arbalet.events import CapacitiveTouchEvents, SystemEvents
+from ...config import ConfigReader
+from ...tools import Rate
+from ...dbus import DBusClient
+from ...events import CapacitiveTouchEvents, SystemEvents
 
 
 class EventServer(object):
@@ -18,7 +18,7 @@ class EventServer(object):
                         SystemEvents()]
         self.rate = Rate(100)
         self.running = False
-        self.bus = DBusClient(event_publisher=True)
+        self.bus = DBusClient(host=self.args.server, event_publisher=True)
 
     def work(self):
         for sensor in self.sensors:
