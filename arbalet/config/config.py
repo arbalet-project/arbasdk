@@ -42,6 +42,10 @@ class ConfigReader(object):
         if not path.isfile(dbus_config):
             raise IOError("D-Bus config file 'dbus.json' not found".format())
 
+        font_config = path.join(path.dirname(__file__), '..', 'config', 'font.json')
+        if not path.isfile(dbus_config):
+            raise IOError("Font config file 'font.json' not found".format())
+
         # Now load all configuration files
         try:
             with open(config, 'r') as f:
@@ -76,6 +80,16 @@ class ConfigReader(object):
         except IOError as e:
             raise IOError("D-Bus configuration file {} can't be read. {}".format(dbus_config, str(e)))
 
+        try:
+            with open(font_config, 'r') as f:
+                self._font = load(f)
+        except ValueError as e:
+            raise ValueError(
+                "Font configuration file {} has an incorrect format, make sure it is a valid JSON. {}".format(font_config,
+                                                                                                               str(e)))
+        except IOError as e:
+            raise IOError("Font configuration file {} can't be read. {}".format(font_config, str(e)))
+
     @property
     def hardware(self):
         return self._config
@@ -87,3 +101,7 @@ class ConfigReader(object):
     @property
     def dbus(self):
         return self._dbus
+
+    @property
+    def font(self):
+        return self._font

@@ -8,14 +8,14 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 import numpy as np
-import json
 from copy import deepcopy
 from itertools import product
 from threading import RLock
 from time import time
 from .arbafont import Font
-from .rate import Rate
+from ..tools import Rate
 from ..colors import name_to_rgb
+from ..config import ConfigReader
 
 __all__ = ['Model']
 
@@ -32,6 +32,9 @@ class Model(object):
             color = name_to_rgb(color)
         self._model = np.tile(color, (height, width, 1)).astype(float)
 
+        config_reader = ConfigReader()
+        self.font_config = config_reader.font
+        self.set_font(self.font_config['font'], self.font_config['vertical'])
 
     def copy(self):
         return deepcopy(self)

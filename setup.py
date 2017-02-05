@@ -32,7 +32,7 @@ setup(
     ],
 
     data_files=[('arbalet/config', ['arbalet/config/default.cfg']),
-                ('arbalet/core', ['arbalet/core/icon.png']),
+                ('arbalet/resources/img', ['arbalet/resources/img/icon.png']),
                 json_config_files
     ],
 

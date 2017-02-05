@@ -6,9 +6,7 @@
     "spi": { "bus": 0,
              "device": 0,
              "speed": 4200000 },
-    "vertical": true, 
-    "refresh_rate": 15, 
-    "font": "freesans",
+    "refresh_rate": 15,
     "mapping":
       [[14, 15, 44, 45, 74, 75, 104, 105, 134, 135],
        [13, 16, 43, 46, 73, 76, 103, 106, 133, 136],

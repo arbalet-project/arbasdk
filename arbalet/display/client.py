@@ -9,13 +9,13 @@
 """
 
 from threading import Thread
-from .rate import Rate
+from ..tools import Rate
 from ..dbus import DBusClient
 from ..config import ConfigReader
 
-__all__ = ['Arbaclient']
+__all__ = ['DisplayClient']
 
-class Arbaclient(Thread):
+class DisplayClient(Thread):
     def __init__(self, arbalet, host='127.0.0.1'):
         Thread.__init__(self)
         self.setDaemon(True)
@@ -30,7 +30,7 @@ class Arbaclient(Thread):
         self.start()
 
     def send_model(self):
-        self.bus.display.publish(self.arbalet.end_model.to_dict())
+        self.bus.display.publish(self.arbalet.model.to_dict())
 
     def close(self):
         self.running = False

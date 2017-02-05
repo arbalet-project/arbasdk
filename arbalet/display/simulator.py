@@ -8,7 +8,8 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from os.path import dirname, join
-from .rate import Rate
+from ..tools import Rate
+from ..resources.img import __file__ as img_resources_path
 from threading import Thread
 from os import environ
 from pygame import color, display, draw, Rect, error, MOUSEBUTTONDOWN
@@ -28,19 +29,22 @@ class Simulator(Thread):
         self.cell_height = sim_width/arbalet.width
         self.cell_width = sim_height/arbalet.height
         self.rate = Rate(arbalet.config['refresh_rate'])
+        self.running = False
 
-        display.set_caption("Arbalet simulator", "Arbalet")
+        # Create the Window, load its title, icon
+        environ['SDL_VIDEO_CENTERED'] = '1'
+        self.display = display.set_mode((self.sim_width, self.sim_height), 0, 32)
+
         if get_extended():
             try:
-                self.icon = load_extended(join(dirname(__file__), 'icon.png'))
+                self.icon = load_extended(join(dirname(img_resources_path), 'icon.png'))
             except error:
-                raise
+                pass
             else:
                 display.set_icon(self.icon)
 
-        environ['SDL_VIDEO_CENTERED'] = '1'
-        self.display = display.set_mode((self.sim_width, self.sim_height), 0, 32)
-        self.running = False
+        display.set_caption("Arbalet simulator", "Arbalet")
+
         self.start()
 
     def simulate_touch_event(self, event):
@@ -54,7 +58,7 @@ class Simulator(Thread):
     def run(self):
         self.running = True
         while self.running:
-            model = self.arbalet.end_model.data_frame
+            model = self.arbalet.model.data_frame
             self.display.lock()
             for w in range(self.arbalet.width):
                 for h in range(self.arbalet.height):

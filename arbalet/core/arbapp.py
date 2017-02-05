@@ -19,28 +19,16 @@ __all__ = ['Application']
 class Application(object):
     app_declared = False  # True when an Application has been instanciated
 
-    def __init__(self, argparser=None, moke_execution=False, touch_mode='off'):
+    def __init__(self, argparser=None, touch_mode='off'):
         if Application.app_declared:
             raise RuntimeError('Application can be instanciated only once')
 
         Application.app_declared = True
         self.read_args(argparser)
-        self.arbalet = Arbalet(not moke_execution and not self.args.no_gui, not moke_execution and self.args.hardware,
-                               self.args.server, self.args.brightness, self.args.factor_sim, self.args.config, interactive=False)
+        self.arbalet = Arbalet(self.args.server, self.args.config)
         self.width = self.arbalet.width
         self.height = self.arbalet.height
         self.events = EventClient(host=self.args.server)
-        self.init_font(self.model)
-
-    @property
-    def model(self):
-        return self.arbalet.user_model
-
-    def init_font(self, model):
-        try:
-            model.set_font(self.arbalet.config['font'], self.arbalet.config['vertical'])
-        except KeyError:
-            model.set_font()
 
     def is_interactive(self):
         """
@@ -60,16 +48,6 @@ class Application(object):
         else:
             parser = argparse.ArgumentParser(description='This script runs on Arbalet and allows the following arguments:')
 
-        parser.add_argument('-w', '--hardware',
-                            action='store_const',
-                            const=True,
-                            default=False,
-                            help='The program must connect directly to Arbalet hardware')
-        parser.add_argument('-ng', '--no-gui',
-                            action='store_const',
-                            const=True,
-                            default=False,
-                            help='The program must not be simulated on the workstation in a 2D window')
         parser.add_argument('-s', '--server',
                             type=str,
                             nargs='?',
@@ -108,3 +86,7 @@ class Application(object):
 
     def close(self):
         self.arbalet.close()
+
+    @property
+    def model(self):
+        return self.arbalet.model

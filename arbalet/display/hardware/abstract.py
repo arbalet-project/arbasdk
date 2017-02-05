@@ -8,7 +8,7 @@
 from __future__ import print_function  # py2 stderr
 from threading import Thread
 from time import sleep
-from ..rate import Rate
+from ...tools import Rate
 
 __all__ = ['AbstractLink']
 
