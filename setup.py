@@ -37,7 +37,7 @@ setup(
     ],
 
     packages=find_packages(),
-    namespace_packages = ['arbalet', 'arbalet.events', 'arbalet.dbus']
+    namespace_packages = ['arbalet']
 )
 
 ## Install Arduino librairies on Unix OSes
