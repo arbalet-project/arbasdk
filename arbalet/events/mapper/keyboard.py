@@ -11,7 +11,7 @@ class KeyboardMapper(object):
     def map(self, raw_event):
         if raw_event['key'] in self.mapping:
             event = {'key': self.mapping[raw_event['key']],
-                     'device': {'type': 'touch', 'id': 'simulated'},
+                     'device': {'type': 'keyboard', 'id': 'main'},
                      'player': 0,
                      'pressed': raw_event['pressed'],
                      'time': time()}
