@@ -1,4 +1,5 @@
-from pygame import display, event, joystick, JOYBUTTONUP, JOYBUTTONDOWN, K_LEFT, K_RIGHT, K_DOWN, K_UP, JOYHATMOTION, JOYAXISMOTION
+from pygame import display, event, joystick
+from pygame import JOYBUTTONUP, JOYBUTTONDOWN, K_LEFT, K_RIGHT, K_DOWN, K_UP, JOYHATMOTION, JOYAXISMOTION
 from time import time
 from .abstract import AbstractEvents
 
@@ -32,6 +33,7 @@ class SystemEvents(AbstractEvents):
         """
         user_events = []
         for e in event.get():
+            print e
             if e.type in [JOYBUTTONUP, JOYBUTTONDOWN]:
                 key = self.joy_mapping[e.button] if e.button in self.joy_mapping else e.button
                 user_events.append({'key': key,
@@ -57,6 +59,7 @@ class SystemEvents(AbstractEvents):
 
                         user_events.append({'key': type,
                                             'device': {'type': 'joystick', 'id': e.joy},
+                                            'player': 0,
                                             'pressed': pressed,
                                             'time': time()})
                         self.hats[e.joy][e.hat][key] = e.value[key]
@@ -66,25 +69,3 @@ class SystemEvents(AbstractEvents):
 
         return user_events
 
-
-
-    # def run(self):
-    #     """
-    #     Run the event manager that redistributes duplicated events to user and SDK, and TODO gathers all events
-    #     """
-    #     self.running = True
-    #     while self.running:
-    #         self.system_events = self._get()  # Get the system event list
-    #         if self._runtime_control:
-    #             # Check for the touch toggling signal
-    #             for ev in self.system_events:
-    #                 if ev.type == JOYBUTTONDOWN and ev.button in self._arbalet.joystick['touch']:
-    #                     self._arbalet.touch.toggle_touch()
-    #                 if ev.type in [MOUSEBUTTONDOWN, MOUSEBUTTONUP]:
-    #                     self._arbalet.handle_mouse_event(ev)
-    #                 if ev.type == QUIT:
-    #                     if self._arbalet.arbasim is not None:
-    #                         self._arbalet.arbasim.close()
-    #                     self.running = False
-    #                     break
-    #         self._rate.sleep()

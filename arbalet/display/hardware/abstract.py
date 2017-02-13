@@ -54,6 +54,9 @@ class AbstractLink(Thread):
             self.close()
             raise IndexError('Incorrect mapping, please check your configuration file, arbalink exiting...')
 
+    def get_touch_events(self):
+        raise NotImplementedError()
+
     def read_touch_frame(self):
         raise NotImplementedError()
 

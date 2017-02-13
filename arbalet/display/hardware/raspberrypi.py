@@ -46,8 +46,8 @@ class RPiLink(AbstractLink):
         self.spi.open(self.arbalet.config['spi']['bus'], self.arbalet.config['spi']['device'])
         self._connected = True
 
-    def read_touch_frame(self):
-        pass
+    def get_touch_events(self):
+        return []
 
     def write2812(self):
         """

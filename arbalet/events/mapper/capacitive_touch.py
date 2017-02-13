@@ -7,21 +7,19 @@
 """
 
 from threading import RLock
-from ..core import Model
-from .abstract import AbstractEvents
+from ...core import Model
+from ..abstract import AbstractEvents
 from numpy import array, mean
 from collections import deque
+from time import time
 
-__all__ = ['CapacitiveTouchEvents']
+__all__ = ['CapacitiveTouchMapper']
 
 
-class CapacitiveTouchEvents(AbstractEvents):
+class CapacitiveTouchMapper(AbstractEvents):
     modes = ['off', 'bidirectional', 'tridirectional', 'quadridirectional', 'columns', 'individual']
-    def __init__(self, touch_mode='off'):
-        # TODO Le touch_mod varie selon les apps,
-        # TODO Il doit etre recu par D-BUS sur un canal command
-        # TODO peut publier un model ...
-        super(CapacitiveTouchEvents, self).__init__()
+    def __init__(self):
+        super(CapacitiveTouchMapper, self).__init__()
         config = self.config_reader.hardware
         self._num_buttons = len(config['touch']['keys']) if config['touch']['num_keys'] > 0 else 0  # 0 button means touch-disabled hardware
         self._touch_events = []
@@ -39,7 +37,7 @@ class CapacitiveTouchEvents(AbstractEvents):
         self._old_touch_mode = 'off'  # Store the former touch mode to be able to pause or resume the touch capability
         self._windowed_touch_values = deque([])  # Store the former touch keys values
         self._calibrated_low_levels = []  # Stores the "low level" = untouched
-        self.set_mode(touch_mode)
+        self.set_mode('quadridirectional') # TODOOOO
         self.plots = []
 
     def set_mode(self, new_mode):
@@ -62,17 +60,6 @@ class CapacitiveTouchEvents(AbstractEvents):
             event = { 'id': button, 'pressed': pressed }
             self._touch_events.append(event)
             self._touch_keys_booleans[button] = pressed
-
-    def create_event_from_pixel(self, h, w, pressed):
-        if self._config['touch']['num_keys'] > 0:
-            for touch_key_id, touch_key in enumerate(self._config['touch']['keys']):
-                for touch_pixel in touch_key:
-                    if touch_pixel[0] == h and touch_pixel[1] == w:
-                        event = { 'id': touch_key_id, 'pressed': pressed }
-                        self._touch_events.append(event)
-                        return
-            # print('Unknown clicked pixel {}, {} for touch simulation'.format(h, w))
-            # No matching can be found if the mouse has moved (especially if refresh rate is low)
 
     def create_event(self, touch, keys):
         """
@@ -150,30 +137,25 @@ class CapacitiveTouchEvents(AbstractEvents):
                                     color = self._config['touch']['colors']['active'] if self._touch_keys_booleans[key] else self._config['touch']['colors']['inactive']
                                     self._model.set_pixel(pixel[0], pixel[1], color)
 
-    def get(self):
-        """
-        Entry points of apps to get the touch events mapped according to current touch mode
-        :return: list of events (dictionary)
-        """
+    def map(self, raw_event):
+
         with self._mode_lock:
             if self._mode == 'off':
-                return []
+                return None
             mapping = self._config['touch']['mapping'][self._mode]
 
-        with self._events_lock:
-            events = self.map_events(self._touch_events, mapping)
-            self._touch_events = []
-        return events
-
-    def map_events(self, raw_events, mapping):
-        events = []
-        for event in raw_events:
-            meaning = mapping[event['id']]
-            down = event['pressed']
-            if meaning != 'none':
-                events.append({ 'key': meaning,
-                                'type': 'down' if down else 'up' })
-        return events
+        print raw_event
+        print "TODO"
+        return None
+        meaning = mapping[raw_event['key']]
+        down = raw_event['pressed']
+        if meaning != 'none':
+            return {'key': meaning,
+                           'device': {'type': 'touch'},
+                           'player': 0,
+                           'pressed': down,
+                           'time': time()}
+        return None
 
     def toggle_touch(self):
         """

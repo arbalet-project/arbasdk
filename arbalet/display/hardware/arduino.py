@@ -31,6 +31,9 @@ class ArduinoLink(AbstractLink):
         self._diminution = diminution
         self._arbalet = arbalet
         self._connected = False
+        self._previous_touch_int = -1
+        self._touch_int = -2
+        self.keys = []
 
         if name=='nt':  # reserved names: 'posix', 'nt', 'os2', 'ce', 'java', 'riscos'
             self._platform = 'windows'
@@ -124,18 +127,23 @@ class ArduinoLink(AbstractLink):
 
     def read_touch_frame(self):
         try:
-            touch_int = self.read_short()
+            self._touch_int = self.read_short()
             num_keys = self._arbalet.config['touch']['num_keys']
-            keys = []
+            self.keys = []
             for key in range(num_keys):
                 key_state = self.read_short()
-                keys.append(key_state)
+                self.keys.append(key_state)
         except (IOError, SerialException,) as e:
             self._serial.close()
             self._connected = False
-        else:
-            if self._arbalet.touch is not None and self._arbalet.config['touch']['num_keys'] > 0:
-                self._arbalet.touch.create_event(touch_int, keys)
+
+    def get_touch_events(self):
+            touch = []
+            if self._previous_touch_int != self._touch_int:
+                feedback = {'type': 'capacitive_touch', 'touch_int': self._touch_int, 'touch_keys': self.keys}
+                touch.append(feedback)
+                self._previous_touch_int = self._touch_int
+            return touch
 
     def write_led_frame(self, end_model):
         try:

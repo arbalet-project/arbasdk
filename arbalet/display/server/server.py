@@ -21,7 +21,7 @@ class DisplayServer(object):
         self.hardware = None
         self.simulation = None
         self.client = None
-        self.bus = DBusClient(display_subscriber=True)
+        self.bus = DBusClient(display_subscriber=True, touch_publisher=True)
         self.running = False
         self.arbalet = Arbalet()
         self.start_displays()
@@ -41,8 +41,19 @@ class DisplayServer(object):
             self.client = DisplayClient(self.args.server)
 
     def work(self):
-        model = self.bus.display.recv(blocking=True)
+        # Step 1/2: Update the model
+        model = self.bus.display.recv(blocking=True)   # TODO non-blocking, loop rate ?
         self.arbalet.model.from_dict(model)
+
+        # Step 2/2: Read feedback
+        events = []
+        if self.simulation is not None:
+            events += self.simulation.get_touch_events()
+        if self.hardware is not None:
+            events += self.hardware.get_touch_events()
+        for e in events:
+            self.bus.touch.publish(e)
+
 
     def run(self):
         self.running = True
