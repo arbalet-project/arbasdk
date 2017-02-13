@@ -11,7 +11,7 @@ class RawEvents(AbstractEvents):
 
     def __init__(self):
         super(RawEvents, self).__init__()
-        self.dbus = DBusClient(touch_subscriber=True)
+        self.dbus = DBusClient(raw_event_subscriber=True)
         self.mappers = {'mice': MiceMapper(),
                         'kbd': KeyboardMapper(),
                         'capacitive_touch': CapacitiveTouchMapper()}
@@ -19,7 +19,7 @@ class RawEvents(AbstractEvents):
     def get(self):
         raw_events = []
         while True:
-            raw_event = self.dbus.touch.recv(blocking=False)
+            raw_event = self.dbus.raw_events.recv(blocking=False)
             if raw_event is None:
                 break
             raw_events.append(raw_event)

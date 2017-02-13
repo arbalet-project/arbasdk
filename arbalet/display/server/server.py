@@ -21,7 +21,7 @@ class DisplayServer(object):
         self.hardware = None
         self.simulation = None
         self.client = None
-        self.bus = DBusClient(display_subscriber=True, touch_publisher=True)
+        self.bus = DBusClient(display_subscriber=True, raw_event_publisher=True)
         self.running = False
         self.arbalet = Arbalet()
         self.start_displays()
@@ -52,7 +52,7 @@ class DisplayServer(object):
         if self.hardware is not None:
             events += self.hardware.get_touch_events()
         for e in events:
-            self.bus.touch.publish(e)
+            self.bus.raw_events.publish(e)
 
 
     def run(self):

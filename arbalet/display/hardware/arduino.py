@@ -138,12 +138,12 @@ class ArduinoLink(AbstractLink):
             self._connected = False
 
     def get_touch_events(self):
-            touch = []
+            raw_events = []
             if self._previous_touch_int != self._touch_int:
-                feedback = {'type': 'capacitive_touch', 'touch_int': self._touch_int, 'touch_keys': self.keys}
-                touch.append(feedback)
+                raw_event = {'type': 'capacitive_touch', 'touch_int': self._touch_int, 'touch_keys': self.keys}
+                raw_events.append(raw_event)
                 self._previous_touch_int = self._touch_int
-            return touch
+            return raw_events
 
     def write_led_frame(self, end_model):
         try:
