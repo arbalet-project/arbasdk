@@ -24,6 +24,8 @@ class EventServer(object):
         for sensor in self.sensors:
             for event in sensor.get():
                 self.bus.events.publish(event)
+                if self.args.verbose:
+                    print("[Arbalet Event Server DEBUG] {}".format(event))
 
     def run(self):
         self.running = True
