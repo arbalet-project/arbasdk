@@ -11,6 +11,7 @@ from ...display.hardware import get_hardware_link
 from ...display import Simulator, DisplayClient
 from ...dbus import DBusClient
 from ...core import Arbalet
+from ...tools import Rate
 
 
 class DisplayServer(object):
@@ -21,10 +22,11 @@ class DisplayServer(object):
         self.hardware = None
         self.simulation = None
         self.client = None
-        self.bus = DBusClient(display_subscriber=True, raw_event_publisher=True)
+        self.bus = DBusClient(display_subscriber=True, raw_event_publisher=True, background_subscriber=True)
         self.running = False
         self.arbalet = Arbalet()
         self.start_displays()
+        self.rate = Rate(50)
 
     def start_displays(self):
         factor_sim = 40    # TODO autosize
@@ -42,8 +44,12 @@ class DisplayServer(object):
 
     def work(self):
         # Step 1/2: Update the model
-        model = self.bus.display.recv(blocking=True)   # TODO non-blocking, loop rate ?
-        self.arbalet.model.from_dict(model)
+        model = self.bus.display.recv(blocking=False)
+        background = self.bus.background.recv(blocking=False)
+        if model is not None:
+            self.arbalet.model.from_dict(model)
+        if background is not None:
+            self.arbalet.background.from_dict(background)
 
         # Step 2/2: Read feedback
         events = []
@@ -53,6 +59,7 @@ class DisplayServer(object):
             events += self.hardware.get_touch_events()
         for e in events:
             self.bus.raw_events.publish(e)
+        self.rate.sleep()
 
 
     def run(self):

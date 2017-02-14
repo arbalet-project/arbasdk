@@ -78,7 +78,8 @@ class DBusClient(object):
     def __init__(self, host="127.0.0.1",
                  event_publisher=False, event_subscriber=False,
                  display_publisher=False, display_subscriber=False,
-                 raw_event_publisher=False, raw_event_subscriber=False):
+                 raw_event_publisher=False, raw_event_subscriber=False,
+                 background_publisher=False, background_subscriber=False):
         config_reader = ConfigReader()
         dbus_config = config_reader.dbus
         port_pub = dbus_config['xpub_port']
@@ -87,8 +88,10 @@ class DBusClient(object):
         self.events = Channel('events', self._context, host, port_pub, port_sub, event_publisher, event_subscriber, False)
         self.display = Channel('display', self._context, host, port_pub, port_sub, display_publisher, display_subscriber, True)
         self.raw_events = Channel('raw_events', self._context, host, port_pub, port_sub, raw_event_publisher, raw_event_subscriber, False)
+        self.background = Channel('background', self._context, host, port_pub, port_sub, background_publisher, background_subscriber, True)
 
     def close(self):
         self.events.close()
         self.display.close()
         self.raw_events.close()
+        self.background.close()

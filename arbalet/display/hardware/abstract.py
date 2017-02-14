@@ -66,7 +66,7 @@ class AbstractLink(Thread):
     def run(self):
         while (self._running):
             if self.is_connected():
-                data_follows = self.write_led_frame(self._arbalet.model)
+                data_follows = self.write_led_frame(self._arbalet.models)
                 if data_follows:
                     self.read_touch_frame()
                 self._rate.sleep()

@@ -8,8 +8,8 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from os.path import dirname, join
-from ..tools import Rate
-from ..resources.img import __file__ as img_resources_path
+from ...tools import Rate
+from ...resources.img import __file__ as img_resources_path
 from threading import Thread
 from os import environ
 from pygame import color, display, draw, Rect, error, MOUSEBUTTONDOWN, MOUSEBUTTONUP, KEYDOWN, KEYUP, QUIT
@@ -83,7 +83,7 @@ class Simulator(Thread):
     def run(self):
         self.running = True
         while self.running:
-            model = self.arbalet.model.data_frame
+            model = self.arbalet.models.data_frame
             self.display.lock()
             for w in range(self.arbalet.width):
                 for h in range(self.arbalet.height):

@@ -8,6 +8,7 @@
 
 from threading import RLock
 from ...core import Model
+from ...dbus import DBusClient
 from ..abstract import AbstractEvents
 from numpy import array, mean
 from collections import deque
@@ -22,6 +23,7 @@ class CapacitiveTouchMapper(AbstractEvents):
         super(CapacitiveTouchMapper, self).__init__()
         config = self.config_reader.hardware
         self._num_buttons = len(config['touch']['keys']) if config['touch']['num_keys'] > 0 else 0  # 0 button means touch-disabled hardware
+        self._dbus = DBusClient(background_publisher=True)
         self._touch_events = []
         self._touch_int = 0  # Last touch state (combination of booleans)
         self._touch_keys_values = []  # Filtered data of last touched keys
@@ -83,6 +85,8 @@ class CapacitiveTouchMapper(AbstractEvents):
                                 if self._config['touch']['mapping'][self._mode][key] != 'none':
                                     color = self._config['touch']['colors']['active'] if self._touch_keys_booleans[key] else self._config['touch']['colors']['inactive']
                                     self._model.set_pixel(pixel[0], pixel[1], color)
+        self._dbus.background.publish(self._model.to_dict())
+        print self._model.to_dict()
 
     def _make_event(self, button, pressed):
         with self._mode_lock:
