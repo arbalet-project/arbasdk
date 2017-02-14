@@ -29,8 +29,12 @@ class RawEvents(AbstractEvents):
             if e['type'] not in self.mappers:
                 print("[Arbalet Raw Event] Unknown mapper for raw event source '{}'".format(e['type']))
                 continue
+
             mapped_event = self.mappers[e['type']].map(e)
-            if mapped_event is not None:
+            # Mapper can output 0, 1 or N event(s) from the raw event
+            if isinstance(mapped_event, list):
+                events += mapped_event
+            elif mapped_event is not None:
                 events.append(mapped_event)
         return events
 

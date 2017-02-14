@@ -129,10 +129,11 @@ class ArduinoLink(AbstractLink):
         try:
             self._touch_int = self.read_short()
             num_keys = self._arbalet.config['touch']['num_keys']
-            self.keys = []
+            keys = []
             for key in range(num_keys):
                 key_state = self.read_short()
-                self.keys.append(key_state)
+                keys.append(key_state)
+            self.keys = keys  # Prevent concurrency
         except (IOError, SerialException,) as e:
             self._serial.close()
             self._connected = False
