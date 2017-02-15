@@ -32,7 +32,6 @@ class Arbalet(object):
     @property
     def models(self):
         m = self.model + self.background
-        print m._model[-1,-1]
         return m
 
     def close(self):

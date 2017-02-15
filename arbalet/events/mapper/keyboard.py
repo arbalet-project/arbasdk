@@ -1,9 +1,12 @@
 from ...config import ConfigReader
+from .abstract import AbstractMapper
 from pygame import K_UP, K_DOWN, K_LEFT, K_RIGHT
 from time import time
 
-class KeyboardMapper(object):
+
+class KeyboardMapper(AbstractMapper):
     def __init__(self):
+        super(KeyboardMapper, self).__init__()
         config_reader = ConfigReader()
         self.config = config_reader.hardware['touch']
         self.mapping = {K_UP: 'up', K_DOWN:'down', K_RIGHT:'right', K_LEFT:'left'}

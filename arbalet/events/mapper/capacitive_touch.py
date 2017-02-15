@@ -7,9 +7,7 @@
 """
 
 from threading import RLock
-from ...core import Model
-from ...dbus import DBusClient
-from ..abstract import AbstractEvents
+from .touch import TouchMapper
 from numpy import array, mean
 from collections import deque
 from time import time
@@ -17,45 +15,15 @@ from time import time
 __all__ = ['CapacitiveTouchMapper']
 
 
-class CapacitiveTouchMapper(AbstractEvents):
-    modes = ['off', 'bidirectional', 'tridirectional', 'quadridirectional', 'columns', 'individual']
+class CapacitiveTouchMapper(TouchMapper):
     def __init__(self):
         super(CapacitiveTouchMapper, self).__init__()
-        config = self.config_reader.hardware
-        self._num_buttons = len(config['touch']['keys']) if config['touch']['num_keys'] > 0 else 0  # 0 button means touch-disabled hardware
-        self._dbus = DBusClient(background_publisher=True)
         self._touch_events = []
         self._touch_int = 0  # Last touch state (combination of booleans)
         self._touch_keys_values = []  # Filtered data of last touched keys
-        self._touch_keys_booleans = [False]*self._num_buttons
         self._events_lock = RLock()
-        self._mode_lock = RLock()
-        self._keypad = True
-        self._height =  config['height']
-        self._width =  config['width']
-        self._config = config
-        self._model = Model(self._height, self._width, 'black')
-        self._mode = 'off'
-        self._old_touch_mode = 'off'  # Store the former touch mode to be able to pause or resume the touch capability
         self._windowed_touch_values = deque([])  # Store the former touch keys values
         self._calibrated_low_levels = []  # Stores the "low level" = untouched
-        self.set_mode('quadridirectional') # TODOOOO
-        self.plots = []
-
-    def set_mode(self, new_mode):
-        """
-        Activate a helper mode by choosing a set of keys to detect
-        """
-        if new_mode in self.modes:
-            if self._num_buttons > 0:
-                with self._mode_lock:
-                    self._mode = new_mode
-        else:
-            raise ValueError("Mode {} is unknown, should be one of {}".format(new_mode, str(self.modes)))
-        self.update_model()
-
-    def set_keypad(self, enabled=True):
-        self._keypad = enabled
 
     def update_calibrated_state(self, button, pressed):
         pressed = bool(pressed)  # Get rid of numpy bools
@@ -70,23 +38,6 @@ class CapacitiveTouchMapper(AbstractEvents):
         :return: (touch_int, touch_key_booleans]
         """
         return self._touch_int, self._touch_keys_booleans
-
-    def update_model(self):
-        with self._mode_lock:
-            if self._mode == 'off' or self._num_buttons == 0 or not self._keypad:
-                self.model.set_all('black')
-            else:
-                mapping = self._config['touch']['mapping'][self._mode]
-                with self._model:
-                    for key, meaning in enumerate(mapping):
-                        if meaning is not None:
-                            pixels = self._config['touch']['keys'][key]
-                            for pixel in pixels:
-                                if self._config['touch']['mapping'][self._mode][key] != 'none':
-                                    color = self._config['touch']['colors']['active'] if self._touch_keys_booleans[key] else self._config['touch']['colors']['inactive']
-                                    self._model.set_pixel(pixel[0], pixel[1], color)
-        self._dbus.background.publish(self._model.to_dict())
-        print self._model.to_dict()
 
     def _make_event(self, button, pressed):
         with self._mode_lock:
@@ -152,20 +103,3 @@ class CapacitiveTouchMapper(AbstractEvents):
         events = self._touch_events
         self._touch_events = []
         return events
-
-    def toggle_touch(self):
-        """
-        Temporarily pause or restore the touch feature
-        If this application is not touch compatible, this method has no effect since it will switch between off and
-        """
-        current_mode = self._mode
-        self.set_mode(self._old_touch_mode)
-        self._old_touch_mode = current_mode
-
-    @property
-    def model(self):
-        return self._model
-
-    @property
-    def mode(self):
-        return self._mode
