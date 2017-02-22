@@ -7,12 +7,11 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from ...config import ConfigReader
-from ...display.hardware import get_hardware_link
-from ...display import Simulator, DisplayClient
+from ...display.hardware import get_hardware_link, Simulator
 from ...dbus import DBusClient
 from ...core import Arbalet
 from ...tools import Rate
-
+from .. import DisplayClient
 
 class DisplayServer(object):
     def __init__(self, parser):

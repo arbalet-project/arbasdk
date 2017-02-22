@@ -1,8 +1,7 @@
 from .arduino import ArduinoLink as _ArduinoLink
 from .raspberrypi import RPiLink as _RPiLink
-
 from os.path import realpath as _realpath
-
+from .simulator import Simulator
 
 def get_hardware_link(arbalet):
     if arbalet.config["controller"] in ["arduino"]: return _ArduinoLink(arbalet)
