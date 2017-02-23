@@ -25,7 +25,7 @@ class DisplayServer(object):
         self.running = False
         self.arbalet = Arbalet()
         self.start_displays()
-        self.rate = Rate(50)
+        self.rate = Rate(config_reader.hardware['refresh_rate'])
 
     def start_displays(self):
         factor_sim = 40    # TODO autosize
@@ -45,6 +45,7 @@ class DisplayServer(object):
         # Step 1/2: Update the model
         model = self.bus.display.recv(blocking=False)
         background = self.bus.background.recv(blocking=False)
+
         if model is not None:
             self.arbalet.model.from_dict(model)
         if background is not None:
