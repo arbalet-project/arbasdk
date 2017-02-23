@@ -21,7 +21,8 @@ class DisplayServer(object):
         self.hardware = None
         self.simulation = None
         self.client = None
-        self.bus = DBusClient(display_subscriber=True, raw_event_publisher=True, background_subscriber=True)
+        host = self.args.server if len(self.args.server) > 0 else '127.0.0.1'
+        self.bus = DBusClient(display_subscriber=True, raw_event_publisher=True, background_subscriber=True, host=host)
         self.running = False
         self.arbalet = Arbalet()
         self.start_displays()
@@ -38,8 +39,11 @@ class DisplayServer(object):
             self.hardware = get_hardware_link(self.arbalet)
 
         if len(self.args.server) > 0:
-            print("[Arbalet Display Server] starting stream forwarding to {}".format(self.args.server))
-            self.client = DisplayClient(self.args.server)
+            print("[Arbalet Display Server] Sniffing display from D-Bus server {}".format(self.args.server))
+
+        if len(self.args.proxy) > 0:
+            print("[Arbalet Display Server] starting display proxy, forwarding display to {}".format(self.args.proxy))
+            self.client = DisplayClient(self.arbalet, self.args.proxy)
 
     def work(self):
         # Step 1/2: Update the model
