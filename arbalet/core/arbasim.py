@@ -61,7 +61,7 @@ class Simulator(Thread):
                 for w in range(self.arbalet.width):
                     for h in range(self.arbalet.height):
                         pixel = model[h, w]
-                        self.display.fill(color.Color(pixel[0], pixel[1], pixel[2]),
+                        self.display.fill(color.Color(int(pixel[0]), int(pixel[1]), int(pixel[2])),
                                          Rect(w*self.cell_width,
                                          h*self.cell_height,
                                          self.cell_width,
