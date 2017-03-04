@@ -11,6 +11,7 @@
 
 from .arbalet import Arbalet
 from ..config import get_config_parser
+from ..display import get_display_parser
 from ..events import EventClient
 import argparse
 
@@ -29,6 +30,7 @@ class Application(object):
         self.width = self.arbalet.width
         self.height = self.arbalet.height
         self.events = EventClient(host=self.args.server)
+        self._servers = Servers(self.args)
 
     def is_interactive(self):
         """
@@ -68,8 +70,14 @@ class Application(object):
                             const=True,
                             default=False,
                             help='Disable the touch feature. This option has no influence on apps that are not touch-compatible')
+        parser.add_argument('-o', '--standalone',
+                            action='store_const',
+                            const=True,
+                            default=False,
+                            help='Run this app in standalone mode by also starting all background servers')
 
         parser = get_config_parser(parser)
+        parser = get_display_parser(parser)
 
         # We parse args normally if running in non-interactive mode, otherwise we ignore args to avoid conflicts with ipython
         self.args = parser.parse_args([] if self.is_interactive() else None)
@@ -80,9 +88,13 @@ class Application(object):
 
     def start(self):
         try:
+            if self.args.standalone:
+                self._servers.start()
             self.run()
         finally:
             self.close()
+            if self.args.standalone:
+                self._servers.stop()
 
     def close(self):
         self.arbalet.close()
@@ -90,3 +102,32 @@ class Application(object):
     @property
     def model(self):
         return self.arbalet.model
+
+
+class Servers(object):
+    """
+    Background servers to run the app in standalone mode
+    """
+    def __init__(self, args):
+        self.processes = []
+        self.args = args
+
+    def start(self):
+        from subprocess import Popen
+        from sys import executable
+
+        self.processes.append(Popen("{} -m arbalet.dbus.proxy".format(executable).strip().split()))
+        self.processes.append(Popen("{} -m arbalet.events.server".format(executable).strip().split()))
+        hardware = "--hardware" if self.args.hardware else ""
+        no_gui = "--no-gui" if self.args.no_gui else ""
+        display_params = " ".join(filter(None, [hardware, no_gui]))
+        self.processes.append(Popen("{} -m arbalet.display.server {}".format(executable, display_params).strip().split(' ')))
+
+    def stop(self):
+        from signal import SIGINT
+
+        for process in self.processes:
+            process.send_signal(SIGINT)
+        print("[Standalone run] Waiting for servers to shutdown")
+        for process in self.processes:
+            process.wait()
