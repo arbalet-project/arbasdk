@@ -48,7 +48,7 @@ class ArduinoLink(AbstractLink):
         try:
             self._serial = Serial(device, self._config['speed'], timeout=3)
         except SerialException as e:
-            print("[Arbalink] Connection to {} at speed {} failed: {}".format(device, self._config['speed'], str(e)), file=stderr)
+            print("[Arbalet Arduino link] Connection to {} at speed {} failed: {}".format(device, self._config['speed'], str(e)), file=stderr)
             self._serial = None
             self._current_device = (self._current_device+1) % len(self._config['devices'])
             return False
@@ -56,7 +56,7 @@ class ArduinoLink(AbstractLink):
             try:
                 self.handshake()
             except (IOError, SerialException, OSError) as e:
-                print("[Arbalink] Handshake failure: {}".format(str(e)), file=stderr)
+                print("[Arbalet Arduino link] Handshake failure: {}".format(str(e)), file=stderr)
                 return False
             return True
 
@@ -134,7 +134,6 @@ class ArduinoLink(AbstractLink):
                 keys.append(key_state)
             self.keys = keys  # Prevent concurrency
         except (IOError, SerialException,) as e:
-            self._serial.close()
             self._connected = False
 
     def get_touch_events(self):
@@ -155,7 +154,6 @@ class ArduinoLink(AbstractLink):
             elif len(ready)>0:
                 raise ValueError("[Arbalet Arduino link] Expected one command of {}, got {}".format(commands, ready))
         except (IOError, SerialException, ) as e:
-            self._serial.close()
             self._connected = False
         else:
             data_follows = ready == self.CMD_BUFFER_READY_DATA_FOLLOWS
@@ -163,6 +161,6 @@ class ArduinoLink(AbstractLink):
 
     def close(self):
         super(ArduinoLink, self).close()
-        if self._serial:
+        if self._serial and self._serial.isOpen():
             self._serial.close()
             self._serial = None

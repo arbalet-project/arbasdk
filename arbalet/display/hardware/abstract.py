@@ -36,11 +36,11 @@ class AbstractLink(Thread):
 
     def connect_forever(self):
         success = False
-        while not self.is_connected():
+        while not self.is_connected() and self._running:
             self.connect()
-            if self.is_connected():
-                break
             sleep(0.5)
+            if self.is_connected() or not self._running:
+                break
         return success
 
     def is_connected(self):
