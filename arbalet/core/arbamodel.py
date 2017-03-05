@@ -11,17 +11,16 @@ import numpy as np
 from copy import deepcopy
 from itertools import product
 from threading import RLock
-from time import time
-from .arbafont import Font
-from ..tools import Rate
 from ..colors import name_to_rgb
-from ..config import ConfigReader
+from ..animations.message import Message
+from ..animations.flash import Flash
 
 __all__ = ['Model']
 
+
 class Model(object):
     # line, column
-    def __init__(self, height, width, color=(0, 0, 0)):
+    def __init__(self, height, width, color=(0, 0, 0), animations=True):
         self.height = height
         self.width = width
         self.font = None
@@ -32,9 +31,16 @@ class Model(object):
             color = name_to_rgb(color)
         self._model = np.tile(color, (height, width, 1)).astype(float)
 
-        config_reader = ConfigReader()
-        self.font_config = config_reader.font
-        self.set_font(self.font_config['font'], self.font_config['vertical'])
+        if animations:
+            self.load_animations()
+        else:
+            self.animations = {}
+
+    def load_animations(self):
+        self.animations = {
+            'message': Message(self),
+            'flash': Flash(self)
+        }
 
     def copy(self):
         return deepcopy(self)
@@ -86,7 +92,7 @@ class Model(object):
         self._model_lock.release()
 
     def __add__(self, other):
-        m = Model(self.height, self.width)
+        m = Model(self.height, self.width, animations=False)
         m._model = self._model + other._model
         return m
 
@@ -94,7 +100,7 @@ class Model(object):
         return (self._model == other._model).all()
 
     def __sub__(self, other):
-        m = Model(self.height, self.width)
+        m = Model(self.height, self.width, animations=False)
         m._model = self._model - other._model
         return m
 
@@ -105,7 +111,7 @@ class Model(object):
         return str(self._model)
 
     def __mul__(self, scalar):
-        m = Model(self.height, self.width)
+        m = Model(self.height, self.width, animations=False)
         m._model = scalar*self._model
         return m
 
@@ -118,59 +124,14 @@ class Model(object):
         self.height = dict_model['h']
         self.width = dict_model['w']
 
-    def set_font(self, font=None, vertical=True):
-        """
-        Instantiate the selected (or the default) font to write on this model
-        :param font: Font name (list: pygame.font.get_fonts()
-        :param vertical: True if the text must be displayed in portrait mode, false for landscape mode
-        """
-        self.font = Font(self.height, self.width, vertical, font)
+    def flash(self, duration=4., speed=1.5):
+        if 'flash' in self.animations:
+            self.animations['flash'].flash(duration, speed)
+        else:
+            print("[Arbalet model animations] Can't flash, animations have not been loaded for this model, please call model.load_animations()")
 
     def write(self, text, foreground, background='black', speed=10):
-        """
-        Blocking and self-locking call writing text to the model until scrolling is complete
-        :param text: an UTF-8 string representing the text to display
-        :param foreground: foreground color
-        :param background: background color
-        :param speed: frequency of update (Hertz)
-        """
-        if self.font is None:
-            self.set_font()
-
-        rendered = self.font.render(text)
-        rate = Rate(speed)
-        if self.font.vertical:
-            scrolling_range = range(len(rendered.rendered[0]))
+        if 'flash' in self.animations:
+            self.animations['message'].write(text, foreground, background, speed)
         else:
-            scrolling_range = range(len(rendered.rendered), 0, -1)
-
-        for start in scrolling_range:
-            with self:
-                for h in range(self.height):
-                    for w in range(self.width):
-                        try:
-                            illuminated = rendered.rendered[h if self.font.vertical else h+start][w+start if self.font.vertical else w]
-                        except IndexError:
-                            illuminated = False
-                        self.set_pixel(h, w, foreground if illuminated else background)
-            rate.sleep()
-
-    def flash(self, duration=4., speed=1.5):
-        """
-        Blocking and self-locking call flashing the current model on and off (mainly for game over)
-        :param duration: Approximate duration of flashing in seconds
-        :param rate: Rate of flashing in Hz
-        """
-        rate = Rate(speed)
-        t0 = time()
-        model_id = 0
-        with self._model_lock:
-            models = [np.zeros((self.height, self.width, 3)), self._model]
-
-        model_off = False
-        while time()-t0 < duration or model_off:
-            with self._model_lock:
-                self._model = models[model_id]
-            model_id = (model_id + 1) % 2
-            model_off = not model_off
-            rate.sleep()
+            print("[Arbalet model animations] Can't write text, animations have not been loaded for this model, please call model.load_animations()")

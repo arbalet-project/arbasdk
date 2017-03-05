@@ -1,17 +1,70 @@
-# -*- coding: utf-8 -*-
 """
     Arbalet - ARduino-BAsed LEd Table
-    Font - Arbalet font for text rendering
+    text writing on LEDs
 
-    Copyright 2015 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
+    Copyright 2017 Yoan Mollard - Arbalet project - http://github.com/arbalet-project
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
+import numpy as np
+from ..config import ConfigReader
+from ..tools import Rate
 from pygame.font import get_default_font, match_font, init as pygame_init, Font as pygame_Font
 from pygame import Color
 from struct import unpack
 from numpy import array, rot90
 
-__all__ = ['Arbatext']
+__all__ = ['Message']
+
+
+class Message(object):
+    def __init__(self, model):
+        self.model = model
+
+        config_reader = ConfigReader()
+        self.font_config = config_reader.font
+        self.hardware_config = config_reader.hardware
+        self.set_font(self.font_config['font'], self.font_config['vertical'])
+
+
+    def set_font(self, font=None, vertical=True):
+        """
+        Instantiate the selected (or the default) font to write on this model
+        :param font: Font name (list: pygame.font.get_fonts()
+        :param vertical: True if the text must be displayed in portrait mode, false for landscape mode
+        """
+        self.font = Font(self.hardware_config['height'], self.hardware_config['width'], vertical, font)
+
+
+    def write(self, text, foreground, background='black', speed=10):
+        """
+        Blocking call writing text to the model until scrolling is complete
+        :param text: an UTF-8 string representing the text to display
+        :param foreground: foreground color
+        :param background: background color
+        :param speed: frequency of update (Hertz)
+        """
+        if self.font is None:
+            self.set_font()
+
+        rendered = self.font.render(text)
+        rate = Rate(speed)
+        if self.font.vertical:
+            scrolling_range = range(len(rendered.rendered[0]))
+        else:
+            scrolling_range = range(len(rendered.rendered), 0, -1)
+
+        for start in scrolling_range:
+            with self.model:
+                for h in range(self.hardware_config['height']):
+                    for w in range(self.hardware_config['width']):
+                        try:
+                            illuminated = rendered.rendered[h if self.font.vertical else h + start][
+                                w + start if self.font.vertical else w]
+                        except IndexError:
+                            illuminated = False
+                        self.model.set_pixel(h, w, foreground if illuminated else background)
+            rate.sleep()
+
 
 class RenderedText(object):
     """
