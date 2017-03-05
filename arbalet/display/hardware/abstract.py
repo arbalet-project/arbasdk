@@ -14,19 +14,21 @@ __all__ = ['AbstractLink']
 
 
 class AbstractLink(Thread):
-    def __init__(self, arbalet, diminution=1):
+    def __init__(self, layers, hardware_config, diminution=1):
         """
         Create a thread in charge of the serial connection to hardware
-        :param arbalet: The reference to arbalet controller (its touch interface can be modified)
+        :param layers: The ModelLayers object to request the end model to
+        :param hardware_config: The hardware configuration
         :param diminution: Brightness of the table from 0.0 to 1.0
         """
         Thread.__init__(self)
         self.setDaemon(True)
         self._current_device = 0
         self._diminution = diminution
+        self._layers = layers
         self._running = True
-        self._arbalet = arbalet
-        self._rate = Rate(self._arbalet.config['refresh_rate'])
+        self._config = hardware_config
+        self._rate = Rate(self._config['refresh_rate'])
 
 
     def connect(self):
@@ -49,7 +51,7 @@ class AbstractLink(Thread):
 
     def map_pixel_to_led(self, h, w):
         try:
-            return self._arbalet.config['mapping'][h][w]
+            return self._config['mapping'][h][w]
         except IndexError as e:
             self.close()
             raise IndexError('Incorrect mapping, please check your configuration file, arbalink exiting...')
@@ -66,7 +68,7 @@ class AbstractLink(Thread):
     def run(self):
         while (self._running):
             if self.is_connected():
-                data_follows = self.write_led_frame(self._arbalet.models)
+                data_follows = self.write_led_frame(self._layers.models)
                 if data_follows:
                     self.read_touch_frame()
                 self._rate.sleep()

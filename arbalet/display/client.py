@@ -16,21 +16,21 @@ from ..config import ConfigReader
 __all__ = ['DisplayClient']
 
 class DisplayClient(Thread):
-    def __init__(self, arbalet, host='127.0.0.1'):
+    def __init__(self, model, host='127.0.0.1'):
         Thread.__init__(self)
         self.setDaemon(True)
         self.server = host
         config_reader = ConfigReader()
         self.port = str(config_reader.dbus['xpub_port'])
         self.running = True
-        self.rate = Rate(arbalet.config["refresh_rate"])
-        self.arbalet = arbalet
+        self.rate = Rate(config_reader.hardware["refresh_rate"])
+        self.model = model
 
         self.bus = DBusClient(host, display_publisher=True)
         self.start()
 
     def send_model(self):
-        self.bus.display.publish(self.arbalet.model.to_dict())
+        self.bus.display.publish(self.model.to_dict())
 
     def close(self):
         self.running = False

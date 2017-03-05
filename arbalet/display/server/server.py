@@ -9,41 +9,54 @@
 from ...config import ConfigReader
 from ...display.hardware import get_hardware_link, Simulator
 from ...dbus import DBusClient
-from ...core import Arbalet
 from ...tools import Rate
-from .. import DisplayClient
+from ...core import Model
+
+
+class ModelLayers(object):
+    """
+    Handle several layers of models
+    """
+    def __init__(self, hardware_config):
+        self.config = hardware_config
+        self.model = Model(self.config['height'], self.config['width'])
+        self.background = Model(self.config['height'], self.config['width'])
+
+    @property
+    def models(self):
+        m = self.model + self.background
+        return m
+
 
 class DisplayServer(object):
     def __init__(self, parser):
         self.args = parser.parse_args()
         config_reader = ConfigReader()
         self.config = config_reader.hardware
+        self.layers = ModelLayers(self.config)
         self.hardware = None
         self.simulation = None
-        self.client = None
         host = self.args.server if len(self.args.server) > 0 else '127.0.0.1'
         self.bus = DBusClient(display_subscriber=True, raw_event_publisher=True, background_subscriber=True, host=host)
+        self.bus_proxy = None
         self.running = False
-        self.arbalet = Arbalet()
-        self.start_displays()
-        self.rate = Rate(config_reader.hardware['refresh_rate'])
+        self.rate = Rate(self.config['refresh_rate'])
 
-    def start_displays(self):
         factor_sim = 40    # TODO autosize
         if not self.args.no_gui:
             print("[Arbalet Display Server] starting simulation")
-            self.simulation = Simulator(self.arbalet, self.arbalet.height*factor_sim, self.arbalet.width*factor_sim)
+            self.simulation = Simulator(self.layers, self.config, self.config['height']*factor_sim, self.config['width']*factor_sim)
 
         if self.args.hardware:
             print("[Arbalet Display Server] starting hardware link")
-            self.hardware = get_hardware_link(self.arbalet)
+            self.hardware = get_hardware_link(self.layers, self.config)
 
         if len(self.args.server) > 0:
             print("[Arbalet Display Server] Sniffing display from D-Bus server {}".format(self.args.server))
 
         if len(self.args.proxy) > 0:
             print("[Arbalet Display Server] starting display proxy, forwarding display to {}".format(self.args.proxy))
-            self.client = DisplayClient(self.arbalet, self.args.proxy)
+            self.bus_proxy = DBusClient(self.args.proxy, display_publisher=True)
 
     def work(self):
         # Step 1/2: Update the model
@@ -51,9 +64,9 @@ class DisplayServer(object):
         background = self.bus.background.recv(blocking=False)
 
         if model is not None:
-            self.arbalet.model.from_dict(model)
+            self.layers.model.from_dict(model)
         if background is not None:
-            self.arbalet.background.from_dict(background)
+            self.layers.background.from_dict(background)
 
         # Step 2/2: Read feedback
         events = []
@@ -64,7 +77,6 @@ class DisplayServer(object):
         for e in events:
             self.bus.raw_events.publish(e)
         self.rate.sleep()
-
 
     def run(self):
         self.running = True
@@ -82,5 +94,6 @@ class DisplayServer(object):
             self.simulation.close()
         if self.hardware is not None:
             self.hardware.close()
-        if self.client is not None:
-            self.client.close()
+        if self.bus_proxy is not None:
+            self.bus_proxy.close()
+        self.bus.close()

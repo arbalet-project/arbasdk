@@ -18,18 +18,17 @@ except ImportError as e:
 
 
 class RPiLink(AbstractLink):
-    def __init__(self, arbalet, diminution=1):
-        super(RPiLink, self).__init__(arbalet, diminution)
-        self.arbalet = arbalet
+    def __init__(self, layers, hardware_config, diminution=1):
+        super(RPiLink, self).__init__(layers, hardware_config, diminution)
         self._connected = False
         self.check_import()
         brightness = min(255, max(1, int(255*diminution)))  # TODO take into account
-        self.count = self.arbalet.height * self.arbalet.width
+        self.count = self._config['height'] * self._config['width']
         self.count_spi_bytes = self.count*3
         self.data = np.zeros(self.count_spi_bytes, dtype=np.uint8)
         self.tx = np.zeros(self.count_spi_bytes * 4, dtype=np.uint8)
         self.spi = spidev.SpiDev()
-        self.speed = self.arbalet.config["spi"]["speed"]
+        self.speed = self._config["spi"]["speed"]
         self.start()
 
     def check_import(self):
@@ -43,7 +42,7 @@ class RPiLink(AbstractLink):
         return self._connected
 
     def connect(self):
-        self.spi.open(self.arbalet.config['spi']['bus'], self.arbalet.config['spi']['device'])
+        self.spi.open(self._config['spi']['bus'], self._config['spi']['device'])
         self._connected = True
 
     def get_touch_events(self):

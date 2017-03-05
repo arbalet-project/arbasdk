@@ -24,12 +24,11 @@ class ArduinoLink(AbstractLink):
     CMD_CLIENT_INIT_FAILURE = b'F'
     PROTOCOL_VERSION = 2
     
-    def __init__(self, arbalet, diminution=1):
-        super(ArduinoLink, self).__init__(arbalet, diminution)
+    def __init__(self, layers, hardware_config, diminution=1):
+        super(ArduinoLink, self).__init__(layers, hardware_config, diminution)
         self._current_device = 0
         self._serial = None
         self._diminution = diminution
-        self._arbalet = arbalet
         self._connected = False
         self._previous_touch_int = -1
         self._touch_int = -2
@@ -45,13 +44,13 @@ class ArduinoLink(AbstractLink):
     def connect(self):
         if self._serial:
             self._serial.close()
-        device = self._arbalet.config['devices'][self._platform][self._current_device]
+        device = self._config['devices'][self._platform][self._current_device]
         try:
-            self._serial = Serial(device, self._arbalet.config['speed'], timeout=3)
+            self._serial = Serial(device, self._config['speed'], timeout=3)
         except SerialException as e:
-            print("[Arbalink] Connection to {} at speed {} failed: {}".format(device, self._arbalet.config['speed'], str(e)), file=stderr)
+            print("[Arbalink] Connection to {} at speed {} failed: {}".format(device, self._config['speed'], str(e)), file=stderr)
             self._serial = None
-            self._current_device = (self._current_device+1) % len(self._arbalet.config['devices'])
+            self._current_device = (self._current_device+1) % len(self._config['devices'])
             return False
         else:
             try:
@@ -98,9 +97,9 @@ class ArduinoLink(AbstractLink):
             version = self.read_uint8()
             assert version != self.CMD_HELLO, "Hardware has reset unexpectedly during handshake, check wiring and configuration file"
             assert version == self.PROTOCOL_VERSION, "Hardware uses protocol v{}, SDK uses protocol v{}".format(version, self.PROTOCOL_VERSION)
-            self.write_short(self._arbalet.height*self._arbalet.width)
-            self.write_uint8(self._arbalet.config['leds_pin_number'])
-            self.write_uint8(self._arbalet.config['touch']['num_keys'])
+            self.write_short(self._config['height']*self._config['width'])
+            self.write_uint8(self._config['leds_pin_number'])
+            self.write_uint8(self._config['touch']['num_keys'])
             init_result = self.read_char()
             if init_result == self.CMD_CLIENT_INIT_SUCCESS:
                 print("Arbalet hardware initialization successful")
@@ -128,7 +127,7 @@ class ArduinoLink(AbstractLink):
     def read_touch_frame(self):
         try:
             self._touch_int = self.read_short()
-            num_keys = self._arbalet.config['touch']['num_keys']
+            num_keys = self._config['touch']['num_keys']
             keys = []
             for key in range(num_keys):
                 key_state = self.read_short()

@@ -20,15 +20,16 @@ __all__ = ['Simulator']
 
 
 class Simulator(Thread):
-    def __init__(self, arbalet, sim_height, sim_width):
+    def __init__(self, layers, hardware_config, sim_height, sim_width):
         Thread.__init__(self)
-        self.arbalet = arbalet
+        self.config = hardware_config
+        self.layers = layers
         self.sim_width = sim_width
         self.sim_height = sim_height
         self.border_thickness = 1
-        self.cell_height = sim_width/arbalet.width
-        self.cell_width = sim_height/arbalet.height
-        self.rate = Rate(arbalet.config['refresh_rate'])
+        self.cell_height = sim_width/self.config['width']
+        self.cell_width = sim_height/self.config['height']
+        self.rate = Rate(self.config['refresh_rate'])
         self.running = False
         self.previous_mouse_button_down = None
 
@@ -83,10 +84,10 @@ class Simulator(Thread):
     def run(self):
         self.running = True
         while self.running:
-            model = self.arbalet.models.data_frame
+            model = self.layers.models.data_frame
             self.display.lock()
-            for w in range(self.arbalet.width):
-                for h in range(self.arbalet.height):
+            for w in range(self.config['width']):
+                for h in range(self.config['height']):
                     pixel = model[h, w]
                     self.display.fill(color.Color(pixel[0], pixel[1], pixel[2]),
                                      Rect(w*self.cell_width,
@@ -95,10 +96,10 @@ class Simulator(Thread):
                                      self.cell_height))
 
             # Draw vertical lines
-            for w in range(self.arbalet.width):
+            for w in range(self.config['width']):
                 draw.line(self.display, color.Color(40, 40, 40), (w*self.cell_width, 0), (w*self.cell_width, self.sim_height), self.border_thickness)
             # Draw horizontal lines
-            for h in range(self.arbalet.height):
+            for h in range(self.config['height']):
                 draw.line(self.display, color.Color(40, 40, 40), (0, h*self.cell_height), (self.sim_width, h*self.cell_height), self.border_thickness)
             display.update()
             self.display.unlock()

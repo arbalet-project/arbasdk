@@ -9,10 +9,10 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from .arbalet import Arbalet
-from ..config import get_config_parser
-from ..display import get_display_parser
+from ..config import get_config_parser, ConfigReader
+from ..display import DisplayClient, get_display_parser
 from ..events import EventClient
+from . import Model
 import argparse
 
 __all__ = ['Application']
@@ -26,11 +26,13 @@ class Application(object):
 
         Application.app_declared = True
         self.read_args(argparser)
-        self.arbalet = Arbalet(self.args.server, self.args.config)
-        self.width = self.arbalet.width
-        self.height = self.arbalet.height
         self.events = EventClient(host=self.args.server)
         self._servers = Servers(self.args)
+        self._config = ConfigReader()
+        self.width = self._config.hardware['width']
+        self.height = self._config.hardware['height']
+        self.model = Model(self.height, self.width)
+        self._client = DisplayClient(self.model, self.args.server)
 
     def is_interactive(self):
         """
@@ -97,11 +99,7 @@ class Application(object):
                 self._servers.stop()
 
     def close(self):
-        self.arbalet.close()
-
-    @property
-    def model(self):
-        return self.arbalet.model
+        self._client.close()
 
 
 class Servers(object):

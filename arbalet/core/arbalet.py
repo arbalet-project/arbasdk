@@ -24,15 +24,8 @@ class Arbalet(object):
 
         self.height = len(self.config['mapping'])
         self.width = len(self.config['mapping'][0]) if self.height>0 else 0
-        self.model = Model(self.height, self.width)
-        self.background = Model(self.height, self.width)
 
         self._client = DisplayClient(self, host)
-
-    @property
-    def models(self):
-        m = self.model + self.background
-        return m
 
     def close(self):
         self._client.close()
