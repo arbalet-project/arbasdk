@@ -1,0 +1,12 @@
+{
+    "sequence": [
+        {"app":"colors", "args": "-t flashes", "timeout": 60},
+        {"app":"tetris"},
+        {"app":"colors", "args": "-t swipe", "timeout": 120},
+        {"app":"lightshero"},
+        {"app":"timeclock", "timeout": 30},
+        {"app":"snake.ai"},
+        {"app":"snake", "timeout": 20},
+        {"app":"spectrum", "timeout": 60}
+    ]
+}
