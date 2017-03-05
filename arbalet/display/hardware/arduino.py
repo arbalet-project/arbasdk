@@ -95,22 +95,22 @@ class ArduinoLink(AbstractLink):
         if hello == self.CMD_HELLO:
             self.write_char(self.CMD_HELLO)
             version = self.read_uint8()
-            assert version != self.CMD_HELLO, "Hardware has reset unexpectedly during handshake, check wiring and configuration file"
-            assert version == self.PROTOCOL_VERSION, "Hardware uses protocol v{}, SDK uses protocol v{}".format(version, self.PROTOCOL_VERSION)
+            assert version != self.CMD_HELLO, "[Arbalet Arduino link] Hardware has reset unexpectedly during handshake, check wiring and configuration file"
+            assert version == self.PROTOCOL_VERSION, "[Arbalet Arduino link] Hardware uses protocol v{}, SDK uses protocol v{}".format(version, self.PROTOCOL_VERSION)
             self.write_short(self._config['height']*self._config['width'])
             self.write_uint8(self._config['leds_pin_number'])
             self.write_uint8(self._config['touch']['num_keys'])
             init_result = self.read_char()
             if init_result == self.CMD_CLIENT_INIT_SUCCESS:
-                print("Arbalet hardware initialization successful")
+                print("[Arbalet Arduino link] Hardware initialization successful")
                 self._connected = True
                 return True
             elif init_result == self.CMD_CLIENT_INIT_FAILURE:
-                raise ValueError("Arduino can't allocate memory, init failure")
+                raise ValueError("[Arbalet Arduino link] Arduino can't allocate memory, init failure")
             else:
-                raise ValueError("Expected one command of {}, got {}".format([self.CMD_CLIENT_INIT_SUCCESS, self.CMD_CLIENT_INIT_FAILURE], init_result))
+                raise ValueError("[Arbalet Arduino link] Expected one command of {}, got {}".format([self.CMD_CLIENT_INIT_SUCCESS, self.CMD_CLIENT_INIT_FAILURE], init_result))
         else:
-            raise ValueError("Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
+            print("[Arbalet Arduino link] Expected command {}, got {} ({})".format(self.CMD_HELLO, hello, ord(hello)))
 
     def get_serial_frame(self, end_model):
         frame = end_model.data_frame
@@ -153,7 +153,7 @@ class ArduinoLink(AbstractLink):
                 frame = self.get_serial_frame(end_model)
                 self._serial.write(frame)
             elif len(ready)>0:
-                raise ValueError("Expected one command of {}, got {}".format(commands, ready))
+                raise ValueError("[Arbalet Arduino link] Expected one command of {}, got {}".format(commands, ready))
         except (IOError, SerialException, ) as e:
             self._serial.close()
             self._connected = False
