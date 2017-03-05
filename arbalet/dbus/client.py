@@ -14,12 +14,17 @@ import zmq
 __all__ = ['DBusClient']
 
 class Channel(object):
-    def __init__(self, channel_name, context, host, port_pub, port_sub, publisher, subscriber, conflate):
+    def __init__(self, channel_name, context, host,dbus_config, publisher, subscriber, conflate):
+        port_pub = dbus_config['xpub_port']
+        port_sub = dbus_config['xsub_port']
+        hwm = dbus_config['hwm']
         if publisher:
             connect_to = "tcp://{}:{}".format(host, port_pub)
             self._publisher = context.socket(zmq.PUB)
             if conflate:
                 self._publisher.setsockopt(zmq.CONFLATE, 1)
+            else:
+                self._publisher.setsockopt(zmq.SNDHWM, hwm)
             print("[Arbalet D-Bus] Connecting publisher to {} on channel '{}'".format(connect_to, channel_name))
             self._publisher.connect(connect_to)
         if subscriber:
@@ -27,6 +32,8 @@ class Channel(object):
             self._subscriber = context.socket(zmq.SUB)
             if conflate:
                 self._subscriber.setsockopt(zmq.CONFLATE, 1)
+            else:
+                self._subscriber.setsockopt(zmq.RCVHWM, hwm)
             self._subscriber.setsockopt(zmq.SUBSCRIBE, channel_name)
             print("[Arbalet D-Bus] Connecting subscriber to {} on channel '{}'".format(connect_to, channel_name))
             self._subscriber.connect(connect_to)
@@ -82,13 +89,11 @@ class DBusClient(object):
                  background_publisher=False, background_subscriber=False):
         config_reader = ConfigReader()
         dbus_config = config_reader.dbus
-        port_pub = dbus_config['xpub_port']
-        port_sub = dbus_config['xsub_port']
         self._context = zmq.Context()
-        self.events = Channel('events', self._context, host, port_pub, port_sub, event_publisher, event_subscriber, False)
-        self.display = Channel('display', self._context, host, port_pub, port_sub, display_publisher, display_subscriber, True)
-        self.raw_events = Channel('raw_events', self._context, host, port_pub, port_sub, raw_event_publisher, raw_event_subscriber, False)
-        self.background = Channel('background', self._context, host, port_pub, port_sub, background_publisher, background_subscriber, True)
+        self.events = Channel('events', self._context, host, dbus_config, event_publisher, event_subscriber, False)
+        self.display = Channel('display', self._context, host, dbus_config, display_publisher, display_subscriber, True)
+        self.raw_events = Channel('raw_events', self._context, host, dbus_config, raw_event_publisher, raw_event_subscriber, False)
+        self.background = Channel('background', self._context, host, dbus_config, background_publisher, background_subscriber, True)
 
     def close(self):
         self.events.close()
