@@ -1,3 +1,3 @@
-from .arbamodel import Model
-from .arbalet import Arbalet
-from .arbapp import Application
+from .model import Model
+from .interactive import InteractiveArbalet
+from .application import Application

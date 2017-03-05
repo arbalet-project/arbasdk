@@ -12,7 +12,8 @@
 from ..config import get_config_parser, ConfigReader
 from ..display import DisplayClient, get_display_parser
 from ..events import EventClient
-from . import Model
+from .model import Model
+from .servers import Servers
 import argparse
 
 __all__ = ['Application']
@@ -27,7 +28,7 @@ class Application(object):
         Application.app_declared = True
         self.read_args(argparser)
         self.events = EventClient(host=self.args.server)
-        self._servers = Servers(self.args)
+        self._servers = Servers(self.args.hardware, self.args.no_gui)
         self._config = ConfigReader()
         self.width = self._config.hardware['width']
         self.height = self._config.hardware['height']
@@ -100,32 +101,3 @@ class Application(object):
 
     def close(self):
         self._client.close()
-
-
-class Servers(object):
-    """
-    Background servers to run the app in standalone mode
-    """
-    def __init__(self, args):
-        self.processes = []
-        self.args = args
-
-    def start(self):
-        from subprocess import Popen
-        from sys import executable
-
-        self.processes.append(Popen("{} -m arbalet.dbus.proxy".format(executable).strip().split()))
-        self.processes.append(Popen("{} -m arbalet.events.server".format(executable).strip().split()))
-        hardware = "--hardware" if self.args.hardware else ""
-        no_gui = "--no-gui" if self.args.no_gui else ""
-        display_params = " ".join(filter(None, [hardware, no_gui]))
-        self.processes.append(Popen("{} -m arbalet.display.server {}".format(executable, display_params).strip().split(' ')))
-
-    def stop(self):
-        from signal import SIGINT
-
-        for process in self.processes:
-            process.send_signal(SIGINT)
-        print("[Standalone run] Waiting for servers to shutdown")
-        for process in self.processes:
-            process.wait()
