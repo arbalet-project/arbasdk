@@ -33,7 +33,6 @@ class SystemEvents(AbstractEvents):
         """
         user_events = []
         for e in event.get():
-            print e
             if e.type in [JOYBUTTONUP, JOYBUTTONDOWN]:
                 key = self.joy_mapping[e.button] if e.button in self.joy_mapping else e.button
                 user_events.append({'key': key,

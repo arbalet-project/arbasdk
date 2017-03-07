@@ -6,6 +6,7 @@ from signal import SIGINT
 class Servers(object):
     """
     Background servers to run the app in standalone mode
+    Must only be used in one-shot runs, as in normal use services are already running in background
     """
     def __init__(self, hardware, no_gui):
         self.processes = []
