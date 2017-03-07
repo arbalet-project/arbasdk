@@ -13,13 +13,14 @@ __all__ = ['RPiLink']
 
 try:
     import spidev
+    from neopixel import Adafruit_NeoPixel, Color
 except ImportError as e:
     pass
 
 
-class RPiLink(AbstractLink):
+class RPiLinkSPI(AbstractLink):
     def __init__(self, layers, hardware_config, diminution=1):
-        super(RPiLink, self).__init__(layers, hardware_config, diminution)
+        super(RPiLinkSPI, self).__init__(layers, hardware_config, diminution)
         self._connected = False
         self.check_import()
         brightness = min(255, max(1, int(255*diminution)))  # TODO take into account
@@ -68,4 +69,51 @@ class RPiLink(AbstractLink):
                 self.data[index*3+1] = r
                 self.data[index*3+2] = b
         self.write2812()
+
+
+class RPiLinkPWM(AbstractLink):
+    LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
+    LED_DMA = 5  # DMA channel to use for generating signal (try 5)
+    LED_INVERT = False  # True to invert the signal (when using NPN transistor level shift)
+
+    def __init__(self, layers, hardware_config, diminution=1):
+        super(RPiLinkPWM, self).__init__(layers, hardware_config, diminution)
+        self._connected = False
+        self.check_import()
+        brightness = min(255, max(1, int(255*diminution)))
+        count = self._config['width'] * self._config['height']
+        led_pin = 18
+        self.leds = Adafruit_NeoPixel(count, led_pin, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, brightness)
+        self.start()
+
+    def check_import(self):
+        # Check import only if this driver has been instanciated
+        try:
+            cls = Adafruit_NeoPixel
+        except NameError as e:
+            raise ImportError("Can't import rpi_ws281x, get it from https://github.com/ymollard/rpi_ws281x")
+
+    def is_connected(self):
+        return self._connected
+
+    def connect(self):
+        try:
+            self.leds.begin()
+        except RuntimeError as e:
+            raise RuntimeError(repr(e) +
+                               "\nWS2811 driver for RPi requires root permissions, are you actually root?"
+                               "\nAlso make sure that PIN{} is PWM-capable".format(self._config['leds_pin_number']))
+        else:
+            self._connected = True
+
+    def get_touch_events(self):
+        return []
+
+    def write_led_frame(self, end_model):
+        for h in range(end_model.get_height()):
+            for w in range(end_model.get_width()):
+                rgb = end_model._model[h][w][0], end_model._model[h][w][1], end_model._model[h][w][2]
+                r, g, b = map(lambda x: int(255*x), rgb)
+                self.leds.setPixelColor(self.map_pixel_to_led(h, w), Color(g, r, b))
+        self.leds.show()
 
