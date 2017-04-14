@@ -11,7 +11,7 @@ import zmq
 from arbalet.config import ConfigReader
 
 class Proxy(object):
-    def __init__(self, argparser):
+    def __init__(self, argparser, arguments=None):
         config_reader = ConfigReader()
         self.config = config_reader.dbus
         self.context = zmq.Context()

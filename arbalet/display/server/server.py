@@ -29,8 +29,8 @@ class ModelLayers(object):
 
 
 class DisplayServer(object):
-    def __init__(self, parser):
-        self.args = parser.parse_args()
+    def __init__(self, parser, arguments=None):
+        self.args = parser.parse_args(arguments)
         config_reader = ConfigReader()
         self.config = config_reader.hardware
         self.layers = ModelLayers(self.config)
@@ -54,7 +54,7 @@ class DisplayServer(object):
         if len(self.args.server) > 0:
             print("[Arbalet Display Server] Sniffing display from D-Bus server {}".format(self.args.server))
 
-        if len(self.args.proxy) > 0:
+        if hasattr(self.args, 'proxy') and len(self.args.proxy) > 0:    # Standalone mode has no proxy argument
             print("[Arbalet Display Server] starting display proxy, forwarding display to {}".format(self.args.proxy))
             self.bus_proxy = DBusClient(self.args.proxy, display_publisher=True)
 

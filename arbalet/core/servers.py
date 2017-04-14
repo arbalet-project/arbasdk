@@ -1,6 +1,7 @@
-from subprocess import Popen
-from sys import executable
-from signal import SIGINT
+from multiprocessing import Process
+from ..dbus.proxy import Proxy
+from ..events.server import EventServer
+from ..display.server import DisplayServer
 
 
 class Servers(object):
@@ -8,22 +9,23 @@ class Servers(object):
     Background servers to run the app in standalone mode
     Must only be used in one-shot runs, as in normal use services are already running in background
     """
-    def __init__(self, hardware, no_gui):
+    def __init__(self, argparser):
         self.processes = []
-        self.hardware = hardware
-        self.no_gui = no_gui
+        self.argparser = argparser
 
     def start(self):
-        self.processes.append(Popen("{} -m arbalet.dbus.proxy".format(executable).strip().split()))
-        self.processes.append(Popen("{} -m arbalet.events.server".format(executable).strip().split()))
-        hardware = "--hardware" if self.hardware else ""
-        no_gui = "--no-gui" if self.no_gui else ""
-        display_params = " ".join(filter(None, [hardware, no_gui]))
-        self.processes.append(Popen("{} -m arbalet.display.server {}".format(executable, display_params).strip().split(' ')))
+        self.processes.append(Process(target=lambda: Proxy(self.argparser).run()))
+        self.processes.append(Process(target=lambda: EventServer(self.argparser).run()))
+        self.processes.append(Process(target=lambda: DisplayServer(self.argparser).run()))
+
+        for process in self.processes:
+            process.start()
 
     def stop(self):
         for process in self.processes:
-            process.send_signal(SIGINT)
+            process.terminate()  # Would be SIGINT nicer?
+
         print("[Standalone run] Waiting for servers to shutdown")
         for process in self.processes:
-            process.wait()   # TODO use timeout=
+            process.join()
+        print("[Standalone run] All servers off, exiting.")

@@ -9,8 +9,8 @@ class EventServer(object):
     Arbalet Events Server
     Initializes the available sensors and publishes them on D-Bus
     """
-    def __init__(self, parser):
-        self.args = parser.parse_args()
+    def __init__(self, parser, arguments=None):
+        self.args = parser.parse_args(arguments)
         config_reader = ConfigReader()
         self.config = config_reader.hardware
         self.joystick = config_reader.joystick
@@ -21,10 +21,11 @@ class EventServer(object):
         self.bus = DBusClient(host=self.args.server, event_publisher=True)
 
     def work(self):
+        verbose = hasattr(self.args, 'proxy') and self.args.verbose
         for sensor in self.sensors:
             for event in sensor.get():
                 self.bus.events.publish(event)
-                if self.args.verbose:
+                if verbose:
                     print("[Arbalet Event Server DEBUG] {}".format(event))
 
     def run(self):

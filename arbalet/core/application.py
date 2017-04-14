@@ -14,7 +14,8 @@ from ..display import DisplayClient, get_display_parser
 from ..events import EventClient
 from .model import Model
 from .servers import Servers
-import argparse
+from argparse import ArgumentParser
+
 
 __all__ = ['Application']
 
@@ -28,7 +29,7 @@ class Application(object):
         Application.app_declared = True
         self.read_args(argparser)
         self.events = EventClient(host=self.args.server)
-        self._servers = Servers(self.args.hardware, self.args.no_gui)
+        self._servers = Servers(argparser)
         self._config = ConfigReader()
         self.width = self._config.hardware['width']
         self.height = self._config.hardware['height']
@@ -51,7 +52,7 @@ class Application(object):
         if argparser:
             parser = argparser
         else:
-            parser = argparse.ArgumentParser(description='This script runs on Arbalet and allows the following arguments:')
+            parser = ArgumentParser(description='This script runs on Arbalet and allows the following arguments:')
 
         parser.add_argument('-s', '--server',
                             type=str,
@@ -96,7 +97,9 @@ class Application(object):
             self.run()
         finally:
             self.close()
+            print ("OK1")
             if self.args.standalone:
+                print("OK2")
                 self._servers.stop()
 
     def close(self):
