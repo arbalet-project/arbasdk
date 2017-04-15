@@ -28,7 +28,7 @@ class Arbalet(object):
         self.model = Model(self.height, self.width)
 
         if hardware or simulation:
-            self._servers = Servers(self._hardware, not self._simulation)
+            self._servers = Servers(self._hardware, self._simulation)
             self._servers.start()
         else:
             self._servers = None
@@ -38,4 +38,4 @@ class Arbalet(object):
     def close(self):
         self._client.close()
         if self._servers is not None:
-            self._servers.stop()
+            self._servers.stop(is_keyboard_interrupt=False)
