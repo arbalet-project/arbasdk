@@ -9,11 +9,11 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from ..config import get_config_parser, ConfigReader
-from ..display import DisplayClient, get_display_parser
-from ..events import EventClient
-from .model import Model
-from .servers import Servers
+from .config import get_config_parser, ConfigReader
+from .display import DisplayClient, get_display_parser
+from .events import EventClient
+from .core.model import Model
+from .core.servers import Servers
 from argparse import ArgumentParser
 
 
@@ -29,7 +29,7 @@ class Application(object):
         Application.app_declared = True
         self.read_args(argparser)
         self.events = EventClient(host=self.args.server)
-        self._servers = Servers(argparser)
+        self._servers = Servers(self.args.hardware, not self.args.hardware)
         self._config = ConfigReader()
         self.width = self._config.hardware['width']
         self.height = self._config.hardware['height']
@@ -95,12 +95,13 @@ class Application(object):
             if self.args.standalone:
                 self._servers.start()
             self.run()
+        except KeyboardInterrupt:
+            if self.args.standalone:
+                self._servers.stop(is_keyboard_interrupt=True)
+        else:
+            self._servers.stop(is_keyboard_interrupt=False)
         finally:
             self.close()
-            print ("OK1")
-            if self.args.standalone:
-                print("OK2")
-                self._servers.stop()
 
     def close(self):
         self._client.close()

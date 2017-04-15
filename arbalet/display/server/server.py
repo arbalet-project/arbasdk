@@ -8,92 +8,21 @@
 """
 from ...config import ConfigReader
 from ...display.hardware import get_hardware_link, Simulator
-from ...dbus import DBusClient
-from ...tools import Rate
-from ...core import Model
-
-
-class ModelLayers(object):
-    """
-    Handle several layers of models
-    """
-    def __init__(self, hardware_config):
-        self.config = hardware_config
-        self.model = Model(self.config['height'], self.config['width'])
-        self.background = Model(self.config['height'], self.config['width'])
-
-    @property
-    def models(self):
-        m = self.model + self.background
-        return m
+from multiprocessing import Event
 
 
 class DisplayServer(object):
-    def __init__(self, parser, arguments=None):
-        self.args = parser.parse_args(arguments)
+    def __init__(self, hardware):
+        self.hardware = hardware
         config_reader = ConfigReader()
         self.config = config_reader.hardware
-        self.layers = ModelLayers(self.config)
-        self.hardware = None
-        self.simulation = None
-        host = self.args.server if len(self.args.server) > 0 else '127.0.0.1'
-        self.bus = DBusClient(display_subscriber=True, raw_event_publisher=True, background_subscriber=True, host=host)
-        self.bus_proxy = None
-        self.running = False
-        self.rate = Rate(self.config['refresh_rate'])
-
-        factor_sim = 40    # TODO autosize
-        if not self.args.no_gui:
-            print("[Arbalet Display Server] starting simulation")
-            self.simulation = Simulator(self.layers, self.config, self.config['height']*factor_sim, self.config['width']*factor_sim)
-
-        if self.args.hardware:
-            print("[Arbalet Display Server] starting hardware link")
-            self.hardware = get_hardware_link(self.layers, self.config)
-
-        if len(self.args.server) > 0:
-            print("[Arbalet Display Server] Sniffing display from D-Bus server {}".format(self.args.server))
-
-        if hasattr(self.args, 'proxy') and len(self.args.proxy) > 0:    # Standalone mode has no proxy argument
-            print("[Arbalet Display Server] starting display proxy, forwarding display to {}".format(self.args.proxy))
-            self.bus_proxy = DBusClient(self.args.proxy, display_publisher=True)
-
-    def work(self):
-        # Step 1/2: Update the model
-        model = self.bus.display.recv(blocking=False)
-        background = self.bus.background.recv(blocking=False)
-
-        if model is not None:
-            self.layers.model.from_dict(model)
-        if background is not None:
-            self.layers.background.from_dict(background)
-
-        # Step 2/2: Read feedback
-        events = []
-        if self.simulation is not None:
-            events += self.simulation.get_touch_events()
-        if self.hardware is not None:
-            events += self.hardware.get_touch_events()
-        for e in events:
-            self.bus.raw_events.publish(e)
-        self.rate.sleep()
 
     def run(self):
-        self.running = True
-        while self.running:
-            try:
-                self.work()
-            except KeyboardInterrupt:
-                print("[Arbalet Display server] Shutdown initiated via SIGINT, closing...")
-                self.close()
-                return
+        if self.hardware:
+            print("[Arbalet Display Server] starting hardware link")
+            get_hardware_link('127.0.0.1', self.config).run()
+        else:
+            print("[Arbalet Display Server] starting simulation")
+            Simulator('127.0.0.1', self.config).run()
 
-    def close(self):
-        self.running = False
-        if self.simulation is not None:
-            self.simulation.close()
-        if self.hardware is not None:
-            self.hardware.close()
-        if self.bus_proxy is not None:
-            self.bus_proxy.close()
-        self.bus.close()
+

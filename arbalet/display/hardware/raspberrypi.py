@@ -6,7 +6,7 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from __future__ import print_function  # py2 stderr
-from .abstract import AbstractLink
+from .abstract import AbstractDisplayDevice
 import numpy as np
 
 __all__ = ['RPiLink']
@@ -18,19 +18,18 @@ except ImportError as e:
     pass
 
 
-class RPiLinkSPI(AbstractLink):
-    def __init__(self, layers, hardware_config, diminution=1):
-        super(RPiLinkSPI, self).__init__(layers, hardware_config, diminution)
+class RPiSPIDisplayServer(AbstractDisplayDevice):
+    def __init__(self, host, hardware_config, diminution=1):
+        super(RPiSPIDisplayServer, self).__init__(host, hardware_config, diminution)
         self._connected = False
         self.check_import()
         brightness = min(255, max(1, int(255*diminution)))  # TODO take into account
-        self.count = self._config['height'] * self._config['width']
+        self.count = self.config['height'] * self.config['width']
         self.count_spi_bytes = self.count*3
         self.data = np.zeros(self.count_spi_bytes, dtype=np.uint8)
         self.tx = np.zeros(self.count_spi_bytes * 4, dtype=np.uint8)
         self.spi = spidev.SpiDev()
-        self.speed = self._config["spi"]["speed"]
-        self.start()
+        self.speed = self.config["spi"]["speed"]
 
     def check_import(self):
         # Check import only if this driver has been instanciated
@@ -43,7 +42,7 @@ class RPiLinkSPI(AbstractLink):
         return self._connected
 
     def connect(self):
-        self.spi.open(self._config['spi']['bus'], self._config['spi']['device'])
+        self.spi.open(self.config['spi']['bus'], self.config['spi']['device'])
         self._connected = True
 
     def get_touch_events(self):
@@ -71,20 +70,19 @@ class RPiLinkSPI(AbstractLink):
         self.write2812()
 
 
-class RPiLinkPWM(AbstractLink):
+class RPiPWMDisplayServer(AbstractDisplayDevice):
     LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
     LED_DMA = 5  # DMA channel to use for generating signal (try 5)
     LED_INVERT = False  # True to invert the signal (when using NPN transistor level shift)
 
-    def __init__(self, layers, hardware_config, diminution=1):
-        super(RPiLinkPWM, self).__init__(layers, hardware_config, diminution)
+    def __init__(self, host, hardware_config, diminution=1):
+        super(RPiPWMDisplayServer, self).__init__(host, hardware_config, diminution)
         self._connected = False
         self.check_import()
         brightness = min(255, max(1, int(255*diminution)))
-        count = self._config['width'] * self._config['height']
+        count = self.config['width'] * self.config['height']
         led_pin = 18
         self.leds = Adafruit_NeoPixel(count, led_pin, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, brightness)
-        self.start()
 
     def check_import(self):
         # Check import only if this driver has been instanciated
@@ -102,7 +100,7 @@ class RPiLinkPWM(AbstractLink):
         except RuntimeError as e:
             raise RuntimeError(repr(e) +
                                "\nWS2811 driver for RPi requires root permissions, are you actually root?"
-                               "\nAlso make sure that PIN{} is PWM-capable".format(self._config['leds_pin_number']))
+                               "\nAlso make sure that PIN{} is PWM-capable".format(self.config['leds_pin_number']))
         else:
             self._connected = True
 

@@ -7,20 +7,20 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 
-from .model import Model
-from .servers import Servers
-from ..config import ConfigReader
-from ..display import DisplayClient
+from .core.model import Model
+from .core.servers import Servers
+from .config import ConfigReader
+from .display import DisplayClient
 
-__all__ = ['InteractiveArbalet']
+__all__ = ['Arbalet']
 
 
-class InteractiveArbalet(object):
+class Arbalet(object):
     def __init__(self, host='127.0.0.1', config='', joystick='', hardware=False, simulation=True):
         config_reader = ConfigReader(config, joystick)
         self.config = config_reader.hardware
         self.joystick = config_reader.joystick
-        self._no_gui = not simulation
+        self._simulation = simulation
         self._hardware = hardware
 
         self.height = self.config['height']
@@ -28,7 +28,7 @@ class InteractiveArbalet(object):
         self.model = Model(self.height, self.width)
 
         if hardware or simulation:
-            self._servers = Servers(self._hardware, self._no_gui)
+            self._servers = Servers(self._hardware, not self._simulation)
             self._servers.start()
         else:
             self._servers = None

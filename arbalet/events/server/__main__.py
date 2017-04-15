@@ -22,4 +22,6 @@ parser.add_argument('-v', '--verbose',
                     help='Print individual events produced by controls mapping ans streamed to user apps')
 
 parser = get_config_parser(parser)
-EventServer(parser).run()
+args = parser.parse_args()
+
+EventServer(args.server, args.verbose).run()

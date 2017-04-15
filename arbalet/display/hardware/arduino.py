@@ -8,15 +8,15 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from __future__ import print_function  # py2 stderr
-from .abstract import AbstractLink
+from .abstract import AbstractDisplayDevice
 from serial import Serial, SerialException
 from struct import pack, unpack, error
 from sys import stderr
 from os import name
 
-__all__ = ['ArduinoLink']
+__all__ = ['ArduinoDisplayServer']
 
-class ArduinoLink(AbstractLink):
+class ArduinoDisplayServer(AbstractDisplayDevice):
     CMD_HELLO = b'H'
     CMD_BUFFER_READY = b'B'
     CMD_BUFFER_READY_DATA_FOLLOWS = b'D'
@@ -24,8 +24,8 @@ class ArduinoLink(AbstractLink):
     CMD_CLIENT_INIT_FAILURE = b'F'
     PROTOCOL_VERSION = 2
     
-    def __init__(self, layers, hardware_config, diminution=1):
-        super(ArduinoLink, self).__init__(layers, hardware_config, diminution)
+    def __init__(self, host, hardware_config, diminution=1, stop_event=None):
+        super(ArduinoDisplayServer, self).__init__(host, hardware_config, diminution, stop_event)
         self._current_device = 0
         self._serial = None
         self._diminution = diminution
@@ -39,18 +39,16 @@ class ArduinoLink(AbstractLink):
         else:
             self._platform = 'unix'
 
-        self.start()
-
     def connect(self):
         if self._serial:
             self._serial.close()
-        device = self._config['devices'][self._platform][self._current_device]
+        device = self.config['devices'][self._platform][self._current_device]
         try:
-            self._serial = Serial(device, self._config['speed'], timeout=3)
+            self._serial = Serial(device, self.config['speed'], timeout=3)
         except SerialException as e:
-            print("[Arbalet Arduino link] Connection to {} at speed {} failed: {}".format(device, self._config['speed'], str(e)), file=stderr)
+            print("[Arbalet Arduino link] Connection to {} at speed {} failed: {}".format(device, self.config['speed'], str(e)), file=stderr)
             self._serial = None
-            self._current_device = (self._current_device+1) % len(self._config['devices'])
+            self._current_device = (self._current_device+1) % len(self.config['devices'])
             return False
         else:
             try:
@@ -97,9 +95,9 @@ class ArduinoLink(AbstractLink):
             version = self.read_uint8()
             assert version != self.CMD_HELLO, "[Arbalet Arduino link] Hardware has reset unexpectedly during handshake, check wiring and configuration file"
             assert version == self.PROTOCOL_VERSION, "[Arbalet Arduino link] Hardware uses protocol v{}, SDK uses protocol v{}".format(version, self.PROTOCOL_VERSION)
-            self.write_short(self._config['height']*self._config['width'])
-            self.write_uint8(self._config['leds_pin_number'])
-            self.write_uint8(self._config['touch']['num_keys'])
+            self.write_short(self.config['height']*self.config['width'])
+            self.write_uint8(self.config['leds_pin_number'])
+            self.write_uint8(self.config['touch']['num_keys'])
             init_result = self.read_char()
             if init_result == self.CMD_CLIENT_INIT_SUCCESS:
                 print("[Arbalet Arduino link] Hardware initialization successful")
@@ -127,7 +125,7 @@ class ArduinoLink(AbstractLink):
     def read_touch_frame(self):
         try:
             self._touch_int = self.read_short()
-            num_keys = self._config['touch']['num_keys']
+            num_keys = self.config['touch']['num_keys']
             keys = []
             for key in range(num_keys):
                 key_state = self.read_short()
@@ -160,7 +158,7 @@ class ArduinoLink(AbstractLink):
             return data_follows
 
     def close(self):
-        super(ArduinoLink, self).close()
+        super(ArduinoDisplayServer, self).close()
         if self._serial and self._serial.isOpen():
             self._serial.close()
             self._serial = None
