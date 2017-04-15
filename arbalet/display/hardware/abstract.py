@@ -37,9 +37,8 @@ class AbstractDisplayDevice(object):
         self.config = config_reader.hardware
         self.layers = ModelLayers(self.config)
         self.bus = DBusClient(display_subscriber=True, raw_event_publisher=True, background_subscriber=True, host=host)
-        self.stop = stop_event
         self.rate = Rate(self.config['refresh_rate'])
-
+        self.running = False
         self._current_device = 0
         self._diminution = diminution
 
@@ -69,10 +68,10 @@ class AbstractDisplayDevice(object):
 
     def connect_forever(self):
         success = False
-        while not self.is_connected() and self.is_running():
+        while not self.is_connected() and self.running:
             self.connect()
             sleep(0.5)
-            if self.is_connected() or not self.is_running():
+            if self.is_connected() or not self.running:
                 break
         return success
 
@@ -99,11 +98,9 @@ class AbstractDisplayDevice(object):
 
         self.rate.sleep()
 
-    def is_running(self):
-        return self.stop is None or not self.stop.is_set()
-
     def run(self):
-        while self.is_running():
+        self.running = True
+        while self.running:
             try:
                 if self.is_connected():
                     self.work()

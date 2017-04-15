@@ -27,35 +27,34 @@ class Simulator(AbstractDisplayDevice):
         self.border_thickness = 1
         self.cell_height = self.sim_width/self.config['width']
         self.cell_width = self.sim_height/self.config['height']
-        self.running = False
         self.display = None
         self.previous_mouse_button_down = None
 
     def get_touch_events(self):
         events = []
-        if self.running:
-            for e in event.get():
-                if e.type in [MOUSEBUTTONDOWN, MOUSEBUTTONUP]:
-                    if e.type == MOUSEBUTTONDOWN:
-                        pos = mouse.get_pos()
-                        pixel = int(pos[1] / self.cell_height), int(pos[0] / self.cell_width)
-                        self.previous_mouse_button_down = pixel
+        for e in event.get():
+            if e.type in [MOUSEBUTTONDOWN, MOUSEBUTTONUP]:
+                if e.type == MOUSEBUTTONDOWN:
+                    pos = mouse.get_pos()
+                    pixel = int(pos[1] / self.cell_height), int(pos[0] / self.cell_width)
+                    self.previous_mouse_button_down = pixel
+                else:
+                    if self.previous_mouse_button_down is None:
+                        continue
                     else:
-                        if self.previous_mouse_button_down is None:
-                            continue
-                        else:
-                            pixel = self.previous_mouse_button_down
-                    feedback = {'type': 'mice', 'pixel': pixel, 'pressed': e.type==MOUSEBUTTONDOWN}
-                    events.append(feedback)
+                        pixel = self.previous_mouse_button_down
+                feedback = {'type': 'mice', 'pixel': pixel, 'pressed': e.type==MOUSEBUTTONDOWN}
+                events.append(feedback)
 
-                elif e.type in [KEYUP, KEYDOWN]:
-                    events.append({'key': e.key,
-                                   'type': 'kbd',
-                                   'pressed': e.type == KEYDOWN})
+            elif e.type in [KEYUP, KEYDOWN]:
+                events.append({'key': e.key,
+                               'type': 'kbd',
+                               'pressed': e.type == KEYDOWN})
 
-                elif e.type == QUIT:
-                    self.running = False
-                    print("[Arbalet Simulator] Simulator window closed, stopping server...")
+            elif e.type == QUIT:
+                self.running = False
+                print("[Arbalet Simulator] Simulator window closed, stopping server...")
+                self.close()
         return events
 
     def connect(self):
@@ -73,7 +72,6 @@ class Simulator(AbstractDisplayDevice):
                 display.set_icon(self.icon)
 
         display.set_caption("Arbalet simulator", "Arbalet")
-        self.running = True
 
     def is_connected(self):
         return self.display is not None
@@ -105,5 +103,4 @@ class Simulator(AbstractDisplayDevice):
         self.display.unlock()
 
     def close(self):
-        self.running = False
         display.quit()
