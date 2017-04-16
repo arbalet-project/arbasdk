@@ -32,7 +32,7 @@ class ModelLayers(object):
 
 
 class AbstractDisplayDevice(object):
-    def __init__(self, host, hardware_config, diminution=1, stop_event=None):
+    def __init__(self, host, hardware_config, diminution=1):
         config_reader = ConfigReader()
         self.config = config_reader.hardware
         self.layers = ModelLayers(self.config)

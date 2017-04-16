@@ -24,8 +24,8 @@ class ArduinoDisplayServer(AbstractDisplayDevice):
     CMD_CLIENT_INIT_FAILURE = b'F'
     PROTOCOL_VERSION = 2
     
-    def __init__(self, host, hardware_config, diminution=1, stop_event=None):
-        super(ArduinoDisplayServer, self).__init__(host, hardware_config, diminution, stop_event)
+    def __init__(self, host, hardware_config, diminution=1):
+        super(ArduinoDisplayServer, self).__init__(host, hardware_config, diminution)
         self._current_device = 0
         self._serial = None
         self._diminution = diminution

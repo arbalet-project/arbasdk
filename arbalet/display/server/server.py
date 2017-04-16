@@ -8,7 +8,6 @@
 """
 from ...config import ConfigReader
 from ...display.hardware import get_hardware_link, Simulator
-from multiprocessing import Event
 
 
 class DisplayServer(object):

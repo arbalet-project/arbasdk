@@ -1,4 +1,4 @@
-from multiprocessing import Process, Event
+from multiprocessing import Process
 from os import kill
 from signal import SIGINT
 from ..dbus.proxy import Proxy
@@ -19,7 +19,6 @@ class Servers(object):
         config_reader = ConfigReader()
         self.config = config_reader.hardware
         self.processes = []
-        self.stop_event = Event()
 
     def start(self):
         self.processes.append(Process(target=lambda: Proxy().run()))
