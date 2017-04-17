@@ -10,7 +10,7 @@
 """
 
 from .config import get_config_parser, ConfigReader
-from .display import DisplayClient, get_display_parser
+from .display import DisplayClient, get_user_display_parser
 from .events import EventClient
 from .core.model import Model
 from .core.servers import Servers
@@ -43,13 +43,11 @@ def get_application_parser(parser=None):
                         help='Disable the touch feature. This option has no influence on apps that are not touch-compatible')
 
     parser.add_argument('-o', '--standalone',
-                        action='store_const',
-                        const=True,
-                        default=False,
+                        action='store_true',
                         help='Run this app in standalone mode by also starting all background servers')
 
     parser = get_config_parser(parser)
-    parser = get_display_parser(parser)
+    parser = get_user_display_parser(parser)
     return parser
 
 
