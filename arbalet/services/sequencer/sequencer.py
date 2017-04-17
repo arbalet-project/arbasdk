@@ -11,6 +11,7 @@
 from ...events import EventClient
 from ...tools import Rate
 from ...config import ConfigReader
+from ...application import Application
 from .apps import AppManager
 from os.path import isfile, isdir, join, realpath, dirname, expanduser
 from shutil import copyfile
@@ -19,17 +20,14 @@ from json import load
 from time import sleep, time
 
 
-class Sequencer(object):
-    def __init__(self, parser):
-        self.args =  parser.parse_args()
+class Sequencer(Application):
+    def __init__(self, **kwargs):
+        super(Sequencer, self).__init__(fake=True, **kwargs)
         self.running = False
         self.config = ConfigReader()
         self.current_app_index = 0
         self.events = EventClient('127.0.0.1')
         self.apps = AppManager()
-
-    def close_processes(self, signal, frame):
-        self.running = False
 
     def get_sequence_file(self):
         home = expanduser("~")

@@ -52,15 +52,28 @@ def get_application_parser(parser=None):
 
 
 class Application(object):
-    def __init__(self, host='127.0.0.1', hardware=False, simulation=True, standalone=False, touch_mode='off', **kwargs):
+    def __init__(self, host='127.0.0.1', hardware=False, simulation=True, standalone=False, touch_mode='off', fake=False, **kwargs):
+        """
+        Mother class for Arbalet applications
+        :param host: host name or IP address of the DBus server, the port is in the DBUs configuration file
+        :param hardware: if True in standalone mode, a display server will connect to the hardware specified in the configuration file
+        :param simulation: if True in standalone mode, a display server will display a simulation
+        :param standalone: if True, enables the standalone mode in which all background servers are automatically started and stopped
+        :param touch_mode: string defining the touch mode of this application
+        :param fake: if True, enables the fake mode in which no display client is started, a fake app cannot display anything
+        """
         self.events = EventClient(host=host)
         self._servers = Servers(hardware, simulation)
         self._config = ConfigReader()
         self._standalone = standalone
+        self._fake = fake
+
         self.width = self._config.hardware['width']
         self.height = self._config.hardware['height']
-        self.model = Model(self.height, self.width)
-        self._client = DisplayClient(self.model, host)
+
+        if not self._fake:
+            self.model = Model(self.height, self.width)
+            self._client = DisplayClient(self.model, host)
 
     def run(self):
         raise NotImplementedError("Application.run() must be overidden")
@@ -79,4 +92,5 @@ class Application(object):
             self.close()
 
     def close(self):
-        self._client.close()
+        if not self._fake:
+            self._client.close()

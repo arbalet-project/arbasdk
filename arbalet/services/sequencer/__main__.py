@@ -1,9 +1,11 @@
 import argparse
 from .sequencer import Sequencer
+from ...application import get_application_parser
 
-parser = argparse.ArgumentParser(description='Application sequencer. Runs and closes Arbalet apps according to a sequence file. '
-                                             'In general the timeout specifies the duration of user inactivity (joystick or keyboard before switching to the next app.'
-                                             'A press on any jostick upper joystick key forces app swicthing unless this has been disabled by interruptible = False within the config files, '
-                                             'e.g. for apps already using upper keys. Only apps that guarantee termination in case of user inactivity should set a timeout to -1')
+parser = argparse.ArgumentParser(description='Arbalet application sequencer. Runs and closes Arbalet apps according to a sequence file. '
+                                             'The sequence file is ~/.arbalet/sequencer.json, it is created with a default sequence if unexisting, or a default sequence is used. '
+                                             'The sequence can then be modified by the user in its homedir. ')
 
-Sequencer(parser).run()
+parser = get_application_parser(parser)
+args = parser.parse_args()
+Sequencer(**args.__dict__).start()
