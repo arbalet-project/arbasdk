@@ -1,12 +1,12 @@
 {
     "sequence": [
-        {"app":"colors", "args": "-t flashes", "timeout": 60},
-        {"app":"tetris"},
-        {"app":"colors", "args": "-t swipe", "timeout": 120},
-        {"app":"lightshero"},
-        {"app":"timeclock", "timeout": 30},
-        {"app":"snake.ai"},
-        {"app":"snake", "timeout": 20},
-        {"app":"spectrum", "timeout": 60}
+        {"name":"colors", "args": {"type": "flashes"}, "timeout": 60},
+        {"name":"tetris"},
+        {"name":"colors", "args": {"type": "flashes"}, "timeout": 120},
+        {"name":"lightshero"},
+        {"name":"timeclock", "timeout": 30},
+        {"name":"snake.ai"},
+        {"name":"snake", "timeout": 20},
+        {"name":"spectrum", "timeout": 60}
     ]
 }
