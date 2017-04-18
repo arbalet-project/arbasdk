@@ -1,10 +1,9 @@
 from pygame import display, event as pygame_event, joystick
 from pygame import JOYBUTTONUP, JOYBUTTONDOWN, K_LEFT, K_RIGHT, K_DOWN, K_UP, JOYHATMOTION, JOYAXISMOTION
 from time import time
-from .abstract import AbstractEvents
 
 
-class SystemEvents(AbstractEvents):
+class SystemEvents(object):
 
     @staticmethod
     def map_hat(prev, out, a, b):

@@ -1,18 +1,16 @@
 from pygame import  K_LEFT, K_RIGHT, K_DOWN, K_UP
-from .abstract import AbstractEvents
 from ..dbus import DBusClient
-from .mapper import MiceMapper
+from .mapper import SimulatedTouchMapper
 from .mapper import KeyboardMapper
 from .mapper import CapacitiveTouchMapper
 
-class RawEvents(AbstractEvents):
+class RawEvents():
     # Joystick keys mapping
     joy_mapping = {K_LEFT: 'left', K_RIGHT: 'right', K_DOWN: 'down', K_UP: 'up'}
 
     def __init__(self):
-        super(RawEvents, self).__init__()
         self.dbus = DBusClient(raw_event_subscriber=True)
-        self.mappers = {'mice': MiceMapper(),
+        self.mappers = {'mice': SimulatedTouchMapper(),
                         'kbd': KeyboardMapper(),
                         'capacitive_touch': CapacitiveTouchMapper()}
 

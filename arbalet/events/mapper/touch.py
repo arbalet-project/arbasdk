@@ -1,16 +1,15 @@
-from .abstract import AbstractMapper
+from ...config import ConfigReader
 from ...core import Model
 from ...dbus import DBusClient
 from threading import RLock
 
 
-class TouchMapper(AbstractMapper):
+class TouchMapper(object):
     modes = ['off', 'bidirectional', 'tridirectional', 'quadridirectional', 'columns', 'individual']
 
     def __init__(self):
-        super(TouchMapper, self).__init__()
         self._dbus = DBusClient(background_publisher=True)
-        self._config = self.config_reader.hardware
+        self._config = ConfigReader().hardware
         self._height =  self._config['height']
         self._width =  self._config['width']
         self._num_buttons = len(self._config['touch']['keys']) if self._config['touch']['num_keys'] > 0 else 0  # 0 button means touch-disabled hardware

@@ -2,9 +2,10 @@ from ...config import ConfigReader
 from .touch import TouchMapper
 from time import time
 
-class MiceMapper(TouchMapper):
+
+class SimulatedTouchMapper(TouchMapper):
     def __init__(self):
-        super(MiceMapper, self).__init__()
+        super(SimulatedTouchMapper, self).__init__()
         config_reader = ConfigReader()
         self.config = config_reader.hardware['touch']
 
