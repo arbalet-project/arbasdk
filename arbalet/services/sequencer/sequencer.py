@@ -28,6 +28,7 @@ class Sequencer(Application):
         self.current_app_index = 0
         self.events = EventClient('127.0.0.1')
         self.apps = AppManager()
+        self.command = None
 
     def get_sequence_file(self):
         home = expanduser("~")
@@ -74,9 +75,8 @@ class Sequencer(Application):
         start = time()
         # We loop while the process is not terminated, the timeout is not expired, and user has not asked 'next' with the joystick
         while self.running and (timeout < 0 or time()-start < timeout) and self.apps.is_running(name):
-            #print("TODO1 new launch")
-            #if self.command is not None:
-            #    return 'new_launch'
+            if self.command is not None:
+                return 'new_launch'
             for e in self.events.get():
                 try:
                     select = e['device']['type'] == 'joystick' and e['pressed'] and e['key'] in self.config.joystick['back']
@@ -104,14 +104,19 @@ class Sequencer(Application):
         rate = Rate(1)
         self.running = True
         while self.running:
-            command = None
+            command = self.command
             if command is None:
                 command = sequence['sequence'][self.current_app_index]
-                print(command)
+            self.command = None
+
+            try:
                 name = command['name']
                 args = command['args'] if 'args' in command else {}
+            except KeyError:
+                pass
+            else:
                 while self.running:  # Loop allowing the user to play again, by restarting app
-                    print("[Arbalet Sequencer] STARTING {}".format(name, args))
+                    print("[Arbalet Sequencer] STARTING {} {}".format(name, args))
                     self.apps.run(command['name'], args)
 
                     # Load next app
@@ -123,10 +128,10 @@ class Sequencer(Application):
                     # Monitor current app
                     timeout = command['timeout'] if 'timeout' in command else -1
                     reason = self.wait(name, timeout, True)
-
                     print("[Arbalet Sequencer] END: {}".format(reason))
                     self.apps.stop(name)
                     if reason != 'restart':
+                        self.current_app_index = (self.current_app_index + 1) % len(sequence['sequence'])
                         break
-            self.current_app_index = (self.current_app_index + 1) % len(sequence['sequence'])
-            rate.sleep()
+            finally:
+                rate.sleep()
