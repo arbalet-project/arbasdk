@@ -11,5 +11,8 @@ def get_hardware_link(host, hardware_config):
     if hardware_config["controller"] in ["rpi_pwm", "pwm"]:
         from .raspberrypi import RPiPWMDisplayServer as _RPiLinkPWM
         return _RPiLinkPWM(host, hardware_config)
+    if hardware_config["controller"] in ["http"]:
+        from .http import HTTPDisplayServer as _HTTPDisplayServer
+        return _HTTPDisplayServer(host, hardware_config)
     raise NotImplementedError("{} knows no implementation of link type \"{}\" specified in config file".format(_realpath(__file__), hardware_config["controller"]))
 
