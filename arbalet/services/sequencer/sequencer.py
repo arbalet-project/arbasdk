@@ -67,9 +67,9 @@ class Sequencer(Application):
         else:
             # read the sequence
             with open(sequence_file) as fsequence:
-                sequence = load(fsequence)
+                self.sequence = load(fsequence)
             # and launch every app in the sequence as a client
-            self.execute_sequence(sequence)
+            self.execute_sequence()
 
     def wait(self, name, timeout=-1, interruptible=True):
         start = time()
@@ -96,7 +96,13 @@ class Sequencer(Application):
             sleep(0.01)
         return 'timeout' if self.apps.is_running(name) else 'terminated'
 
-    def execute_sequence(self, sequence):
+    def view_id_to_index(self, view_id):   # TODO: better sequence/view collection to prevent systematic search (OrderedDict?)
+        try:
+            return [view["id"] for view in self.sequence['sequence']].index(view_id)
+        except ValueError:
+            return -1
+
+    def execute_sequence(self):
         # change WD to the modules' root
         #cwd = join(realpath(dirname(__file__)), '..', '..', 'apps')
         #chdir(cwd)
@@ -105,14 +111,20 @@ class Sequencer(Application):
         self.running = True
         while self.running:
             command = self.command
+
             if command is None:
-                command = sequence['sequence'][self.current_app_index]
+                for app in range(len(self.sequence['sequence'])):  # Prevent an infinite loop when no app is enabled
+                    command = self.sequence['sequence'][self.current_app_index]
+                    if 'enabled' not in command or command['enabled']:
+                        break
+                    self.current_app_index = (self.current_app_index + 1) % len(self.sequence['sequence'])
             self.command = None
 
             try:
                 name = command['name']
                 args = command['args'] if 'args' in command else {}
-            except KeyError:
+            except KeyError, TypeError:
+                # No app in list will trigger a TypeError, wrong command may create a KeyError
                 pass
             else:
                 while self.running:  # Loop allowing the user to play again, by restarting app
@@ -131,7 +143,7 @@ class Sequencer(Application):
                     print("[Arbalet Sequencer] END: {}".format(reason))
                     self.apps.stop(name)
                     if reason != 'restart':
-                        self.current_app_index = (self.current_app_index + 1) % len(sequence['sequence'])
+                        self.current_app_index = (self.current_app_index + 1) % len(self.sequence['sequence'])
                         break
             finally:
                 rate.sleep()
