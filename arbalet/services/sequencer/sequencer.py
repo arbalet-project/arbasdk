@@ -74,6 +74,9 @@ class Sequencer(Application):
         # We loop while the process is not terminated, the timeout is not expired, and user has not asked 'next' with the joystick
         while self.running and (timeout < 0 or time()-start < timeout) and self.apps.is_running(name):
             if self.command is not None:
+                print self.command
+                if self.command == 'stop':
+                    self.command = None
                 return 'new_launch'
             for e in self.events.get():
                 try:
