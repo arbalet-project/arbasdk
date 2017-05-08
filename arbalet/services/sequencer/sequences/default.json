@@ -1,12 +1,13 @@
 {
     "sequence": [
-        {"name":"colors", "args": {"type": "flashes"}, "timeout": 60},
-        {"name":"tetris"},
-        {"name":"colors", "args": {"type": "flashes"}, "timeout": 120},
-        {"name":"lightshero"},
-        {"name":"timeclock", "timeout": 30},
-        {"name":"snake.ai"},
-        {"name":"snake", "timeout": 20},
-        {"name":"spectrum", "timeout": 60}
+        {"id": "colors.flashes", "name":"colors", "args": {"type": "flashes"}, "timeout": 30, "enabled": true},
+        {"id": "tetris.default", "name":"tetris", "enabled": true},
+        {"id": "colors.swipe", "name":"colors", "args": {"type": "swipe"}, "timeout": 120, "enabled": true},
+        {"id": "lightshero.default", "name":"lightshero", "enabled": true},
+        {"id": "timeclock.default", "name":"timeclock", "timeout": 30, "enabled": true},
+        {"id": "snake.ai.default", "name":"snake.ai", "enabled": true},
+        {"id": "snake.default", "name":"snake", "timeout": 10, "enabled": true},
+        {"id": "lost_in_space.default", "name":"lost_in_space", "args":{"auto": true}, "timeout": 20, "enabled": true},
     ]
 }
+
