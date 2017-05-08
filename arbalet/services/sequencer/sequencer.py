@@ -30,6 +30,15 @@ class Sequencer(Application):
         self.apps = AppManager()
         self.command = None
 
+        sequence_file = self.get_sequence_file()
+        if sequence_file is None or not isfile(sequence_file):
+            print("[Arbalet Sequencer] Can't open sequence file {}".format(sequence_file))
+            self.sequence = []
+        else:
+            # read the sequence
+            with open(sequence_file) as fsequence:
+                self.sequence = load(fsequence)
+
     def get_sequence_file(self):
         home = expanduser("~")
         app_dir = join(home, ".arbalet")  # TODO make cross-plateform
@@ -59,17 +68,6 @@ class Sequencer(Application):
             return default_sequence_file
         else:
             return None
-
-    def run(self):
-        sequence_file = self.get_sequence_file()
-        if sequence_file is None or not isfile(sequence_file):
-            print("[Arbalet Sequencer] Can't open sequence file {}".format(sequence_file))
-        else:
-            # read the sequence
-            with open(sequence_file) as fsequence:
-                self.sequence = load(fsequence)
-            # and launch every app in the sequence as a client
-            self.execute_sequence()
 
     def wait(self, name, timeout=-1, interruptible=True):
         start = time()
@@ -102,7 +100,7 @@ class Sequencer(Application):
         except ValueError:
             return -1
 
-    def execute_sequence(self):
+    def run(self):
         # change WD to the modules' root
         #cwd = join(realpath(dirname(__file__)), '..', '..', 'apps')
         #chdir(cwd)
