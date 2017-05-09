@@ -7,7 +7,7 @@
         {"id": "timeclock.default", "name":"timeclock", "timeout": 30, "enabled": true},
         {"id": "snake.ai.default", "name":"snake.ai", "enabled": true},
         {"id": "snake.default", "name":"snake", "timeout": 10, "enabled": true},
-        {"id": "lost_in_space.default", "name":"lost_in_space", "args":{"auto": true}, "timeout": 20, "enabled": true},
+        {"id": "lost_in_space.default", "name":"lost_in_space", "args":{"auto": true}, "timeout": 20, "enabled": true}
     ]
 }
 
