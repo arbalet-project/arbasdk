@@ -10,7 +10,7 @@ json_config_files = (config_dir, [join(config_dir, file) for file in listdir(con
 
 setup(
     name='arbalet_core',
-    version='3.0.0',
+    version='3.1.0',
     license="GNU General Public License 3",
     description="Python API for development with Arbalet LED tables (ARduino-BAsed LEd Table)",
     url='http://github.com/arbalet-project',
