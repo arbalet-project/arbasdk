@@ -7,6 +7,19 @@ from ..config import ConfigReader
 from ..display.server import DisplayServer
 
 
+def _run_proxy():
+    return Proxy().run()
+
+def _run_event_server():
+    return EventServer('127.0.0.1').run()
+
+def _run_hardware_display():
+    return DisplayServer(hardware=True).run()
+
+def _run_simulation_display():
+    return DisplayServer(hardware=False).run()
+
+
 class Servers(object):
     """
     Background servers to run the app in standalone mode
@@ -20,15 +33,17 @@ class Servers(object):
         self.config = config_reader.hardware
         self.processes = []
 
+
+    
     def start(self):
-        self.processes.append(Process(target=lambda: Proxy().run()))
-        self.processes.append(Process(target=lambda: EventServer('127.0.0.1').run()))
+        self.processes.append(Process(target=_run_proxy))
+        self.processes.append(Process(target=_run_event_server))
 
         if self.hardware:
-            self.processes.append(Process(target=lambda: DisplayServer(hardware=True).run()))
+            self.processes.append(Process(target=_run_hardware_display))
 
         if self.simulation:
-            self.processes.append(Process(target=lambda:DisplayServer(hardware=False).run()))
+            self.processes.append(Process(target=_run_simulation_display))
 
         for process in self.processes:
             process.start()
