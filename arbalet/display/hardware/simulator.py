@@ -14,6 +14,7 @@ from os import environ
 from pygame import color, display, draw, Rect, error, MOUSEBUTTONDOWN, MOUSEBUTTONUP, KEYDOWN, KEYUP, QUIT
 from pygame.image import load_extended, get_extended
 from pygame import mouse, event
+from numpy import rot90
 
 __all__ = ['Simulator']
 
@@ -22,11 +23,11 @@ class Simulator(AbstractDisplayDevice):
     def __init__(self, host, hardware_config, diminution=1):
         super(Simulator, self).__init__(host, hardware_config, diminution)
         factor_sim = 40   # TODO autosize
-        self.sim_width = self.config['width']*factor_sim
-        self.sim_height = self.config['height']*factor_sim
+        self.sim_width = self.config['transformed']['width']*factor_sim
+        self.sim_height = self.config['transformed']['height']*factor_sim
         self.border_thickness = 1
-        self.cell_height = self.sim_width/self.config['width']
-        self.cell_width = self.sim_height/self.config['height']
+        self.cell_height = self.sim_width/self.config['transformed']['width']
+        self.cell_width = self.sim_height/self.config['transformed']['height']
         self.display = None
         self.previous_mouse_button_down = None
 
@@ -80,10 +81,10 @@ class Simulator(AbstractDisplayDevice):
         pass
 
     def write_led_frame(self, end_model):
-        model = self.layers.models.data_frame
+        model = rot90(self.layers.models.data_frame, self.config['transformed']['num_rotations'])
         self.display.lock()
-        for w in range(self.config['width']):
-            for h in range(self.config['height']):
+        for w in range(self.config['transformed']['width']):
+            for h in range(self.config['transformed']['height']):
                 pixel = model[h, w]
                 self.display.fill(color.Color(int(pixel[0]), int(pixel[1]), int(pixel[2])),
                                   Rect(w * self.cell_width,
@@ -92,11 +93,11 @@ class Simulator(AbstractDisplayDevice):
                                        self.cell_height))
 
         # Draw vertical lines
-        for w in range(self.config['width']):
+        for w in range(self.config['transformed']['width']):
             draw.line(self.display, color.Color(40, 40, 40), (w * self.cell_width, 0),
                       (w * self.cell_width, self.sim_height), self.border_thickness)
         # Draw horizontal lines
-        for h in range(self.config['height']):
+        for h in range(self.config['transformed']['height']):
             draw.line(self.display, color.Color(40, 40, 40), (0, h * self.cell_height),
                       (self.sim_width, h * self.cell_height), self.border_thickness)
         display.update()

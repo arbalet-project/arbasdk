@@ -1,6 +1,7 @@
 from os import path
 from json import load
 from configparser import RawConfigParser
+from numpy import rot90
 
 
 def get_config_parser(existing_parser):
@@ -59,6 +60,23 @@ class ConfigReader(object):
             # Add additional handy attributes
             self._config['height'] = len(self._config['mapping'])
             self._config['width'] = len(self._config['mapping'][0]) if self._config['height'] > 0 else 0
+
+            if self._config['height'] < self._config['width']:
+                print("Configuration file warning: Arbalet has a vertical geometry by convention (width <= height). "
+                      "Please use the rotation attribute instead of a horizontal geometry.")
+
+            if 'rotation' not in self._config:
+                self._config['rotation'] = 0
+            elif self._config['rotation'] % 90 != 0:
+                print("Incorrect rotation in configuration file, must be multiple of 90")
+                self._config['rotation'] = 0
+
+            self._config['transformed'] = {}
+            self._config['transformed']['num_rotations'] = (self._config['rotation']//90) % 4
+            # Select num_rotations only among [0, 1, 2, 3]
+            self._config['transformed']['mapping'] = rot90(self._config['mapping'], self._config['transformed']['num_rotations'])
+            self._config['transformed']['height'] = len(self._config['transformed']['mapping'])
+            self._config['transformed']['width'] = len(self._config['transformed']['mapping'][0]) if len(self._config['transformed']['mapping']) > 0 else 0
 
         try:
             with open(joystick_config, 'r') as f:
