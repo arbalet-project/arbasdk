@@ -27,7 +27,7 @@ class Model(object):
 
         self._model_lock = RLock()
 
-        if isinstance(color, str):
+        if isinstance(color, (str, unicode)):
             color = name_to_rgb(color)
         self._model = np.tile(color, (height, width, 1)).astype(float)
 
@@ -59,18 +59,18 @@ class Model(object):
         return np.clip((255*self._model).astype(int), 0, 255)
 
     def set_pixel(self, h, w, color):
-        if isinstance(color, str):
+        if isinstance(color, (str, unicode)):
             color = name_to_rgb(color)
         self._model[h, w] = color
 
     def set_line(self, h, color):
-        if isinstance(color, str):
+        if isinstance(color, (str, unicode)):
             color = name_to_rgb(color)
         for w in range(self.width):
             self._model[h, w] = color
 
     def set_column(self, w, color):
-        if isinstance(color, str):
+        if isinstance(color, (str, unicode)):
             color = name_to_rgb(color)
         for h in range(self.height):
             self._model[h, w] = color
@@ -79,7 +79,7 @@ class Model(object):
         return map(tuple, product(range(self.height), range(self.width)))
 
     def set_all(self, color):
-        if isinstance(color, str):
+        if isinstance(color, (str, unicode)):
             color = name_to_rgb(color)
         for w in range(self.width):
             for h in range(self.height):
