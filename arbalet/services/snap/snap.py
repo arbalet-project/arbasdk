@@ -37,7 +37,7 @@ class SnapServer(Application):
 
     def set_pixel_rgb(self, h, w, r, g, b):
         def scale(v):
-            return min(1., max(0, float(v)/100.))
+            return min(1., max(0., float(v)/255.))
         
         self.model.set_pixel(int(h)-1, int(w)-1, map(scale, [r, g, b]))
         return ''
