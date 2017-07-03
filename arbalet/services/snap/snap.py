@@ -9,6 +9,7 @@
     License: GPL version 3 http://www.gnu.org/licenses/gpl.html
 """
 from flask import Flask
+from flask import request
 from flask_cors import CORS
 from arbalet.application import Application
 from webbrowser import open
@@ -24,7 +25,7 @@ class SnapServer(Application):
 
     def route(self):
         self.flask.route('/set_pixel/<h>/<w>/<color>', methods=['GET'])(self.set_pixel)
-        self.flask.route('/set_pixel_rgb/<h>/<w>/<r>/<g>/<b>', methods=['GET'])(self.set_pixel_rgb)
+        self.flask.route('/set_pixel_rgb', methods=['POST'])(self.set_pixel_rgb)
         self.flask.route('/erase_all', methods=['GET'])(self.erase_all)
 
     def set_pixel(self, h, w, color):
@@ -35,14 +36,14 @@ class SnapServer(Application):
         self.model.set_all('black')
         return ''
 
-    def set_pixel_rgb(self, h, w, r, g, b):
+    def set_pixel_rgb(self):
         def scale(v):
             return min(1., max(0., float(v)/255.))
-        
-        self.model.set_pixel(int(h)-1, int(w)-1, map(scale, [r, g, b]))
+        data = request.get_data().split(':')
+        self.model.set_pixel(int(data[0])-1, int(data[1])-1, map(scale, data[2:]))
         return ''
 
     def run(self):
-        open('http://snap.berkeley.edu/run')
+        # open('http://snap.berkeley.edu/run')
         self.flask.run(host='0.0.0.0', port=self.port)
 
