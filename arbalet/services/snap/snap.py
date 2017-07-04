@@ -13,6 +13,8 @@ from flask import request
 from flask_cors import CORS
 from arbalet.application import Application
 from webbrowser import open
+from numpy.random import randint
+from threading import Lock
 
 
 class SnapServer(Application):
@@ -20,10 +22,30 @@ class SnapServer(Application):
         super(SnapServer, self).__init__(**kwargs)
         self.flask = Flask(__name__)
         CORS(self.flask)
+
+        self.nicknames = []
         self.authorized_nick = {}
+        self.nicknames_lock = Lock()
+        self.init_nicknames()
+
         self.port = int(port)
         self.route()
 
+    def init_nicknames(self):
+        self.nicknames = ['Apple', 'Apricot', 'Avocado', 'Banana', 'Bilberry', 'Blackberry', 'Blackcurrant',
+                          'Blueberry', 'Boysenberry', 'Currant', 'Cherry', 'Cherimoya', 'Cloudberry', 'Coconut',
+                          'Cranberry', 'Cucumber', 'Custard apple', 'Damson', 'Date', 'Dragonfruit', 'Durian',
+                          'Elderberry', 'Feijoa', 'Fig', 'Goji berry', 'Gooseberry', 'Grape', 'Raisin',
+                          'Grapefruit', 'Guava', 'Honeyberry', 'Huckleberry', 'Jabuticaba', 'Jackfruit',
+                          'Jambul', 'Jujube', 'Juniper berry', 'Kiwifruit', 'Kumquat', 'Lemon', 'Lime',
+                          'Loquat', 'Longan', 'Lychee', 'Mango', 'Marionberry', 'Melon', 'Cantaloupe',
+                          'Honeydew', 'Watermelon', 'Miracle fruit', 'Mulberry', 'Nectarine', 'Nance',
+                          'Olive', 'Orange', 'Blood orange', 'Clementine', 'Mandarine', 'Tangerine',
+                          'Papaya', 'Passionfruit', 'Peach', 'Pear', 'Persimmon', 'Physalis', 'Plantain',
+                          'Plum', 'Prune', 'Pineapple', 'Plumcot', 'Pomegranate', 'Pomelo', 'Purple mangosteen',
+                          'Quince', 'Raspberry', 'Salmonberry', 'Rambutan', 'Redcurrant', 'Salal berry', 'Salak',
+                          'Satsuma', 'Soursop', 'Star fruit', 'Solanum quitoense', 'Strawberry', 'Tamarillo',
+                          'Tamarind', 'Ugli fruit', 'Yuzu']
 
     def route(self):
         # self.flask.route('/set_pixel/<h>/<w>/<color>', methods=['GET'])(self.set_pixel)
@@ -31,6 +53,7 @@ class SnapServer(Application):
         self.flask.route('/set_pixel_rgb', methods=['POST'])(self.set_pixel_rgb)
         self.flask.route('/is_authorized/<nickname>', methods=['GET'])(self.is_authorized)
         self.flask.route('/authorize', methods=['POST'])(self.authorize)
+        self.flask.route('/get_nickname', methods=['GET'])(self.get_nickname)
 
     # def set_pixel(self, h, w, color):
     #     self.model.set_pixel(int(h)-1, int(w)-1, color)
@@ -48,17 +71,27 @@ class SnapServer(Application):
         return ''
 
     def is_authorized(self, nickname):
-        if not nickname in self.authorized_nick.keys():
-            self.authorized_nick[nickname] = False
+        with self.nicknames_lock:
+            if not nickname in self.authorized_nick.keys():
+                self.authorized_nick[nickname] = False
         return str(self.authorized_nick[nickname])
 
     def authorize(self):
         # first revock authorization of other participants
-        for key in self.authorized_nick.keys():
-            self.authorized_nick[key] = False
-        # then authorize given nickname
-        self.authorized_nick[request.get_data()] = True
+        with self.nicknames_lock:
+            for key in self.authorized_nick.keys():
+                self.authorized_nick[key] = False
+            self.authorized_nick[request.get_data()] = True
         return ''
+
+    def get_nickname(self):
+        rand_id = randint(0, len(self.nicknames))
+        with self.nicknames_lock:
+            while self.nicknames[rand_id] in self.authorized_nick.keys():
+                rand_id = randint(0, len(self.nicknames))
+            nickname = self.nicknames[rand_id]
+            self.authorized_nick[nickname] = False 
+        return nickname
 
     def run(self):
         # open('http://snap.berkeley.edu/run')
