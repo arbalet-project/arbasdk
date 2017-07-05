@@ -15,6 +15,7 @@ from arbalet.application import Application
 from webbrowser import open
 from numpy.random import randint
 from threading import Lock
+import sys
 
 
 class SnapServer(Application):
@@ -66,8 +67,12 @@ class SnapServer(Application):
     def set_pixel_rgb(self):
         def scale(v):
             return min(1., max(0., float(v)/255.))
-        data = request.get_data().split(':')
-        self.model.set_pixel(int(data[0])-1, int(data[1])-1, map(scale, data[2:]))
+        try:
+            data = request.get_data().split(':')
+            if self.authorized_nick[data[-1]]:
+                self.model.set_pixel(int(data[0])-1, int(data[1])-1, map(scale, data[2:-1]))
+        except Exception:
+            sys.exc_clear()
         return ''
 
     def is_authorized(self, nickname):
