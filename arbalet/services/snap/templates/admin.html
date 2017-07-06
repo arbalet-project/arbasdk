@@ -1,0 +1,27 @@
+<!doctype html>
+<title>Arbalet Frontage admin page</title>
+
+<head>
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+</head>
+
+<body>
+  <table id="users">
+  <thead><tr><th>Username</th><th>Active?</th></tr></thead>
+  <tbody>
+  	{% for n in nicknames %}
+	<tr><td>{{ n }}</td><td><label> 
+	<input type="radio" name="active_user" data-user-id={{ n }} value="active">
+	</label>
+	</td></tr>
+  	{% endfor %}
+  </tbody>
+</body>
+
+{% block endscript %}
+<script>
+$('[name=active_user]').change(function() {
+  $.post('/authorize', $(this).attr('data-user-id'));
+});
+</script>
+{% endblock endscript %}

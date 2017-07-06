@@ -33,6 +33,7 @@ setup(
 
     data_files=[('arbalet/config', ['arbalet/config/default.cfg']),
                 ('arbalet/resources/img', ['arbalet/resources/img/icon.png']),
+                ('arbalet/services/snap/templates', ['arbalet/services/snap/templates/admin.html']),
                 ('arbalet/services/sequencer/sequences', ['arbalet/services/sequencer/sequences/default.json']),
                 json_config_files
     ],

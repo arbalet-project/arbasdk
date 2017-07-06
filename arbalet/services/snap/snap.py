@@ -11,6 +11,8 @@
 from flask import Flask
 from flask import request
 from flask_cors import CORS
+from flask import render_template
+
 from arbalet.application import Application
 from webbrowser import open
 from numpy.random import randint
@@ -19,7 +21,13 @@ import sys
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
+import tornado.gen
+
 import petname
+from time import time
+from time import sleep
+import logging
+import socket
 
 
 class SnapServer(Application):
@@ -28,8 +36,9 @@ class SnapServer(Application):
         self.flask = Flask(__name__)
         CORS(self.flask)
 
+        logging.basicConfig(level=logging.DEBUG)
         self.current_auth_nick = ""
-        self.authorized_nick = {}
+        self.nicknames = {}
         self.lock = RLock()
         # self.init_nicknames()
 
@@ -52,9 +61,21 @@ class SnapServer(Application):
         #                   'Satsuma', 'Soursop', 'Star fruit', 'Solanum', 'Strawberry', 'Tamarillo',
         #                   'Tamarind', 'Yuzu']
 
+    def checkNicknamesValidity(self):
+        while True:
+            with self.lock:
+                for k, v in self.nicknames.iteritems():
+                    if time() - v > 20:
+                        del self.nicknames[k]
+                print(self.nicknames)
+            sleep(1)
+
+
     def route(self):
         # self.flask.route('/set_pixel/<h>/<w>/<color>', methods=['GET'])(self.set_pixel)
         # self.flask.route('/erase_all', methods=['GET'])(self.erase_all)
+        
+        self.flask.route('/admin', methods=['GET', 'POST'])(self.renderAdminPage)
         self.flask.route('/set_pixel_rgb', methods=['POST'])(self.set_pixel_rgb)
         self.flask.route('/is_authorized/<nickname>', methods=['GET'])(self.is_authorized)
         self.flask.route('/authorize', methods=['POST'])(self.authorize)
@@ -64,6 +85,10 @@ class SnapServer(Application):
     #     self.model.set_pixel(int(h)-1, int(w)-1, color)
     #     return ''
 
+    def renderAdminPage(self):
+        res = render_template('admin.html', nicknames=self.nicknames.keys())
+        return res
+    
     def erase_all(self):
         self.model.set_all('black')
         return ''
@@ -74,7 +99,7 @@ class SnapServer(Application):
         try:
             data = request.get_data().split(':')
             with self.lock:
-                if self.authorized_nick[data[-1]]:
+                if data[-1] == self.current_auth_nick:
                     self.model.set_pixel(int(data[0])-1, int(data[1])-1, map(scale, data[2:-1]))
         except Exception:
             sys.exc_clear()
@@ -82,37 +107,42 @@ class SnapServer(Application):
 
     def is_authorized(self, nickname):
         with self.lock:
-            if not nickname in self.authorized_nick.keys():
-                self.authorized_nick[nickname] = False
-        return str(self.authorized_nick[nickname])
+            self.nicknames[nickname] = time()
+        return str(nickname == self.current_auth_nick)
 
     def authorize(self):
         # first revock authorization of other participants
         with self.lock:
-            if self.current_auth_nick in self.authorized_nick.keys():
-                self.authorized_nick[self.current_auth_nick] = False
-            self.current_auth_nick = request.get_data() 
-            self.authorized_nick[self.current_auth_nick] = True
+            self.current_auth_nick = request.get_data()
             self.erase_all()
         return ''
 
     def get_nickname(self):
         rand_id = petname.generate()
         with self.lock:
-            while rand_id in self.authorized_nick.keys():
+            while rand_id in self.nicknames.keys():
                 rand_id = petname.generate()
-            self.authorized_nick[rand_id] = False 
+            self.nicknames[rand_id] = time()
         return rand_id
 
     def run(self):
         # open('http://snap.berkeley.edu/run')
-        # self.flask.run(host='0.0.0.0', port=self.port)
+
+        # 
+        # scheduler.add_job(self.checkNicknamesValidity, 'interval', seconds=1)
+        # 
+
+        print("Starting main loop")
+
         try:
             loop = IOLoop()
             http_server = HTTPServer(WSGIContainer(self.flask))
             http_server.listen(self.port)
+            
+            # loop.add_callback(self.checkNicknamesValidity)
+            
             loop.start()
-
+            
         except socket.error as serr:
             # Re raise the socket error if not "[Errno 98] Address already in use"
             if serr.errno != errno.EADDRINUSE:
