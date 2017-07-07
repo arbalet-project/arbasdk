@@ -9,11 +9,15 @@
   <table id="users">
   <thead><tr><th>Username</th><th>Active?</th></tr></thead>
   <tbody>
+    <tr><td>Turn off</td><td><label> 
+    <input type="radio" name="active_user" data-user-id=turnoff value="active" checked="checked">
+    </label>
+    </td></tr>
   	{% for n in nicknames %}
-	<tr><td>{{ n }}</td><td><label> 
-	<input type="radio" name="active_user" data-user-id={{ n }} value="active">
-	</label>
-	</td></tr>
+    	<tr><td>{{ n }}</td><td><label> 
+    	<input type="radio" name="active_user" data-user-id={{ n }} value="active">
+    	</label>
+    	</td></tr>
   	{% endfor %}
   </tbody>
 </body>

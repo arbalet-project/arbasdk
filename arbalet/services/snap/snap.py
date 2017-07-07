@@ -26,6 +26,8 @@ import tornado.gen
 import petname
 from time import time
 from time import sleep
+import datetime
+import threading
 import logging
 import socket
 
@@ -40,52 +42,53 @@ class SnapServer(Application):
         self.current_auth_nick = ""
         self.nicknames = {}
         self.lock = RLock()
-        # self.init_nicknames()
-
         self.port = int(port)
         self.route()
 
-    # def init_nicknames(self):
-        # self.nicknames = ['Apple', 'Apricot', 'Avocado', 'Banana', 'Bilberry', 'Blackberry', 'Blackcurrant',
-        #                   'Blueberry', 'Boysenberry', 'Currant', 'Cherry', 'Cherimoya', 'Cloudberry', 'Coconut',
-        #                   'Cranberry', 'Cucumber', 'Custard apple', 'Damson', 'Date', 'Dragonfruit', 'Durian',
-        #                   'Elderberry', 'Feijoa', 'Fig', 'Goji', 'Gooseberry', 'Grape', 'Raisin',
-        #                   'Grapefruit', 'Guava', 'Honeyberry', 'Huckleberry', 'Jabuticaba', 'Jackfruit',
-        #                   'Jambul', 'Jujube', 'Juniper', 'Kiwifruit', 'Kumquat', 'Lemon', 'Lime',
-        #                   'Loquat', 'Longan', 'Lychee', 'Mango', 'Marionberry', 'Melon', 'Cantaloupe',
-        #                   'Honeydew', 'Watermelon', 'Mulberry', 'Nectarine', 'Nance', 'Olive', 
-        #                   'Orange', 'Clementine', 'Mandarine', 'Tangerine',
-        #                   'Papaya', 'Passionfruit', 'Peach', 'Pear', 'Persimmon', 'Physalis', 'Plantain',
-        #                   'Plum', 'Prune', 'Pineapple', 'Plumcot', 'Pomegranate', 'Pomelo', 'Mangosteen',
-        #                   'Quince', 'Raspberry', 'Salmonberry', 'Rambutan', 'Redcurrant', 'Salal', 'Salak',
-        #                   'Satsuma', 'Soursop', 'Star fruit', 'Solanum', 'Strawberry', 'Tamarillo',
-        #                   'Tamarind', 'Yuzu']
-
-    def checkNicknamesValidity(self):
+    def check_nicknames_validity(self):
         while True:
             with self.lock:
+                temp_dict = {}
                 for k, v in self.nicknames.iteritems():
-                    if time() - v > 20:
-                        del self.nicknames[k]
-                print(self.nicknames)
+                    if time() - v < 20:
+                        temp_dict[k] = v
+                self.nicknames = temp_dict
             sleep(1)
 
-
     def route(self):
-        # self.flask.route('/set_pixel/<h>/<w>/<color>', methods=['GET'])(self.set_pixel)
-        # self.flask.route('/erase_all', methods=['GET'])(self.erase_all)
-        
-        self.flask.route('/admin', methods=['GET', 'POST'])(self.renderAdminPage)
+        self.flask.route('/admin', methods=['GET', 'POST'])(self.render_admin_page)
         self.flask.route('/set_pixel_rgb', methods=['POST'])(self.set_pixel_rgb)
+        self.flask.route('/set_rgb_matrix', methods=['POST'])(self.set_rgb_matrix)
         self.flask.route('/is_authorized/<nickname>', methods=['GET'])(self.is_authorized)
         self.flask.route('/authorize', methods=['POST'])(self.authorize)
         self.flask.route('/get_nickname', methods=['GET'])(self.get_nickname)
 
-    # def set_pixel(self, h, w, color):
-    #     self.model.set_pixel(int(h)-1, int(w)-1, color)
-    #     return ''
+    def set_rgb_matrix(self):
+        def scale(v):
+            return min(1., max(0., float(v)/255.))
+        try:
+            data = request.get_data().split(':')
+            with self.lock:
+                if data.pop(0) == self.current_auth_nick:
+                    nb_rows = 4
+                    nb_cols = 19
+                    r = 0
+                    c = 0
+                    while data:
+                        red = data.pop(0)
+                        green = data.pop(0)
+                        blue = data.pop(0)
+                        self.model.set_pixel(c, r, map(scale, [red, green, blue]))
+                        if c < nb_cols - 1:
+                            c += 1
+                        else:
+                            c = 0
+                            r += 1
+        except Exception:
+            sys.exc_clear()
+        return ''  
 
-    def renderAdminPage(self):
+    def render_admin_page(self):
         res = render_template('admin.html', nicknames=self.nicknames.keys())
         return res
     
@@ -111,7 +114,6 @@ class SnapServer(Application):
         return str(nickname == self.current_auth_nick)
 
     def authorize(self):
-        # first revock authorization of other participants
         with self.lock:
             self.current_auth_nick = request.get_data()
             self.erase_all()
@@ -127,10 +129,9 @@ class SnapServer(Application):
 
     def run(self):
         # open('http://snap.berkeley.edu/run')
-
-        # 
-        # scheduler.add_job(self.checkNicknamesValidity, 'interval', seconds=1)
-        # 
+        timerThread = threading.Thread(target=self.check_nicknames_validity)
+        timerThread.daemon = True
+        timerThread.start()
 
         print("Starting main loop")
 
@@ -138,9 +139,6 @@ class SnapServer(Application):
             loop = IOLoop()
             http_server = HTTPServer(WSGIContainer(self.flask))
             http_server.listen(self.port)
-            
-            # loop.add_callback(self.checkNicknamesValidity)
-            
             loop.start()
             
         except socket.error as serr:
