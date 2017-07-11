@@ -2,7 +2,16 @@
 <title>Arbalet Frontage admin page</title>
 
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" type="text/css" href="admin.css">
 <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+<style>
+body {
+    position: relative;
+    height: auto;
+}
+</style>
 </head>
 
 <body>
@@ -10,12 +19,20 @@
   <thead><tr><th>Username</th><th>Active?</th></tr></thead>
   <tbody>
     <tr><td>Turn off</td><td><label> 
+    {% if authorized_nick =="" or authorized_nick == "turnoff" %}
     <input type="radio" name="active_user" data-user-id=turnoff value="active" checked="checked">
+    {% else %}
+    <input type="radio" name="active_user" data-user-id=turnoff value="active">
+    {% endif %}
     </label>
     </td></tr>
   	{% for n in nicknames %}
     	<tr><td>{{ n }}</td><td><label> 
-    	<input type="radio" name="active_user" data-user-id={{ n }} value="active">
+      {% if n == authorized_nick %}
+    	<input type="radio" name="active_user" data-user-id={{ n }} value="active" checked="checked">
+      {% else %}
+      <input type="radio" name="active_user" data-user-id={{ n }} value="active">
+      {% endif %}
     	</label>
     	</td></tr>
   	{% endfor %}
@@ -27,5 +44,7 @@
 $('[name=active_user]').change(function() {
   $.post('/authorize', $(this).attr('data-user-id'));
 });
+
+$('#body').css('min-height', screen.height);
 </script>
 {% endblock endscript %}
