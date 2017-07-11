@@ -18,7 +18,7 @@ setup(
     author_email="contact@arbalet-project.org",
     long_description=open('README.md').read(),
 
-    install_requires= ["pygame", "configparser", "pyserial", "zmq", "numpy", "flask", "flask_cors"],
+    install_requires= ["pygame", "configparser", "pyserial", "zmq", "numpy", "flask", "flask_cors", "petname"],
     include_package_data=True,
     zip_safe=False,  # contains data files
 
