@@ -29,7 +29,6 @@ import petname
 from time import time
 from time import sleep
 import datetime
-import threading
 import logging
 import socket
 
@@ -73,15 +72,13 @@ class SnapServer(Application):
         self.route()
 
     def check_nicknames_validity(self):
-        while True:
-            with self.lock:
-                temp_dict = {}
-                for k, v in self.nicknames.iteritems():
-                    if time() - v < 20:
-                        temp_dict[k] = v
-                self.nicknames = temp_dict
-            sleep(1)
-
+        with self.lock:
+            temp_dict = {}
+            for k, v in self.nicknames.iteritems():
+                if time() - v < 20:
+                    temp_dict[k] = v
+            self.nicknames = temp_dict
+        
     def route(self):
         self.flask.route('/admin', methods=['GET', 'POST'])(self.render_admin_page)
         self.flask.route('/set_pixel_rgb', methods=['POST'])(self.set_pixel_rgb)
@@ -117,9 +114,16 @@ class SnapServer(Application):
 
     @requires_auth
     def render_admin_page(self):
-        res = render_template('admin.html', nicknames=self.nicknames.keys())
+        res = render_template('admin.html', nicknames=self.nicknames.keys(), authorized_nick=self.current_auth_nick)
         return res
-    
+
+    @requires_auth
+    def authorize(self):
+        with self.lock:
+            self.current_auth_nick = request.get_data()
+            self.erase_all()
+        return ''
+
     def erase_all(self):
         self.model.set_all('black')
         return ''
@@ -139,13 +143,9 @@ class SnapServer(Application):
     def is_authorized(self, nickname):
         with self.lock:
             self.nicknames[nickname] = time()
+        # update user table
+        self.check_nicknames_validity()
         return str(nickname == self.current_auth_nick)
-
-    def authorize(self):
-        with self.lock:
-            self.current_auth_nick = request.get_data()
-            self.erase_all()
-        return ''
 
     def get_nickname(self):
         rand_id = petname.generate()
@@ -157,10 +157,6 @@ class SnapServer(Application):
 
     def run(self):
         # open('http://snap.berkeley.edu/run')
-        timerThread = threading.Thread(target=self.check_nicknames_validity)
-        timerThread.daemon = True
-        timerThread.start()
-
         print("Starting main loop")
 
         try:
