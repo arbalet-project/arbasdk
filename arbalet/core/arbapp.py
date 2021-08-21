@@ -11,6 +11,7 @@
 
 from .arbalet import Arbalet
 import argparse
+import pygame
 
 __all__ = ['Application']
 
@@ -28,6 +29,15 @@ class Application(object):
         self.arbalet.touch.set_mode('off' if self.args.no_touch else touch_mode)
         self.width = self.arbalet.width
         self.height = self.arbalet.height
+
+        # User commands (joy/keyboard)
+        self.command = {
+            'special': False,
+            'right': False,
+            'left': False,
+            'up': False,
+            'down': False
+        }
 
         self.init_font(self.model)
 
@@ -95,6 +105,54 @@ class Application(object):
 
         # We parse args normally if running in non-interactive mode, otherwise we ignore args to avoid conflicts with ipython
         self.args = parser.parse_args([] if self.is_interactive() else None)
+
+    def process_events(self):
+        # Process new events
+        for event in self.arbalet.events.get():
+            # Joystick control
+            if event.type == pygame.JOYBUTTONDOWN:
+                self.command['special'] = True
+            elif event.type == pygame.JOYHATMOTION:
+                if   event.value[0] == 1:
+                    self.command['right'] = True
+                elif event.value[0] == -1:
+                    self.command['left']  = True
+                elif event.value[0] == 0:
+                    self.command['right'] = False
+                    self.command['left']  = False
+                if   event.value[1] == 1:
+                    self.command['up']    = True
+                elif event.value[1] == -1:
+                    self.command['down']  = True
+                elif event.value[1] == 0:
+                    self.command['up']    = False
+                    self.command['down']  = False
+            # Keyboard control
+            elif event.type in (pygame.KEYDOWN, pygame.KEYUP):
+                is_down = event.type == pygame.KEYDOWN
+                if   event.key == pygame.K_SPACE:
+                    self.command['special'] = is_down
+                elif event.key == pygame.K_RIGHT:
+                    self.command['right']   = is_down
+                elif event.key == pygame.K_LEFT:
+                    self.command['left']    = is_down
+                elif event.key == pygame.K_UP:
+                    self.command['up']      = is_down
+                elif event.key == pygame.K_DOWN:
+                    self.command['down']  = is_down
+
+        for event in self.arbalet.touch.get():
+            is_down = event['type'] == 'down'
+            if   event['key'] == 'space':
+                self.command['special']  = is_down
+            elif event['key'] == 'right':
+                self.command['right']    = is_down
+            elif event['key'] == 'left':
+                self.command['left']     = is_down
+            elif event['key'] == 'up':
+                self.command['up']       = is_down
+            elif event['key'] == 'down':
+                self.command['down']     = is_down
 
 
     def run(self):
